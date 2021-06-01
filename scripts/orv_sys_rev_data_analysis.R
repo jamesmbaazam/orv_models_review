@@ -6,8 +6,8 @@ library('forcats')
 library('stringr')
 
 #load the data and remove the Kobotoolbox meaningless variables 
-review_data_wide <- readxl::read_excel('./data/final_data/2021_02_25_wide.xlsx') 
-review_data_compact <- readxl::read_excel('./data/final_data/2021_02_25_compact.xlsx') 
+review_data_wide <- readxl::read_excel(normalizePath('./data/final_data/2021_02_25_wide.xlsx')) 
+review_data_compact <- readxl::read_excel(normalizePath('./data/final_data/2021_02_25_compact.xlsx')) 
 
 
 ############################################

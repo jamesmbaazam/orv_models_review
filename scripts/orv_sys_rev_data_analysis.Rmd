@@ -1,0 +1,132 @@
+---
+title: "Systematic review of outbreak response models"
+author: "James Azam"
+date: "01/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE, message=FALSE}
+library('tidyverse')
+library('ggthemes')
+library('scales')
+library('janitor')
+library('forcats')
+library('stringr')
+
+#load the data and remove the Kobotoolbox meaningless variables 
+review_data_wide <- readxl::read_excel(normalizePath('../data/final_data/2021_02_25_wide.xlsx')) 
+review_data_compact <- readxl::read_excel(normalizePath('../data/final_data/2021_02_25_compact.xlsx')) 
+
+
+############################################
+#Data cleaning
+############################################
+
+
+review_data_wide_cleaned <- review_data_wide %>% 
+    filter(publication_year < 2020) %>% #remove 2020 because the search was done in Jan 2020 so it gives the illusion that there were few papers in 2020.
+    select(-c('start':'phonenumber'),
+           -c('__version__':'_notes')
+           ) %>% 
+    clean_names() %>% 
+    remove_empty('cols')
+
+review_data_compact_cleaned <- review_data_compact %>% 
+  filter(publication_year < 2020) %>% #remove 2020 because the search was done in Jan 2020 so it gives the illusion that there were few papers in 2020.
+  select(-c('start':'phonenumber'),
+         -c('__version__':'_notes')
+         ) %>% 
+  clean_names() %>% 
+  remove_empty('cols')
+```
+
+# Primary objectives 
+
+## 1. Is modelling being used to inform policy? 
+
+Alternative 1: Bar plot
+```{r echo=FALSE}
+#' 1A. Get relevant variables. NB: pm = policy making
+pm_data <- review_data_compact_cleaned %>%
+  select(
+    paper_title,
+    publication_year,
+    starts_with("objectives"),
+    starts_with("author_affiliation_type"),
+    starts_with('disease'),
+    author_in_country_studied,
+    outbreak_type,
+    modelling_timing,
+    data_used
+  )
+
+# 1B. Create the author affiliation types and reword the string NA
+pm_data_mutated <- pm_data %>%
+  arrange(publication_year) %>%
+  mutate(
+    author_affiliation_type = str_replace_all(author_affiliation_type, ' ', ' + '),
+    author_in_country_studied = if_else(author_in_country_studied == 'NA', 'not_applicable',
+                                        author_in_country_studied
+                                        )
+    )
+
+
+
+#' Count by affiliation type and make a barplot
+pm_data_affiliation_aggregated <- pm_data_mutated %>% 
+    mutate(author_affiliation_type = as_factor(author_affiliation_type)) %>% 
+    count(author_affiliation_type) %>% 
+    mutate(perc = round(n/sum(n)*100, 1)) %>% 
+    arrange(desc(n))
+ 
+    
+affiliation_type_aggregated_barplot <- pm_data_affiliation_aggregated %>%
+    ggplot() + geom_bar(aes(x = reorder(author_affiliation_type, perc),
+                            y = perc,
+                            fill = factor(author_affiliation_type)
+                            ),
+                        stat = 'identity',
+                        color = 'black'
+                        ) +
+    scale_y_continuous(breaks = seq(0, 60, 5),
+                       labels = seq(0, 60, 5)) +
+    labs(title = 'Aggregated number of studies per author affiliation type', 
+         x = 'Author affiliation type', 
+         y = 'Percent') + 
+ #   coord_polar(theta = "x", direction = -1) +
+    scale_color_tableau()
+
+plot(affiliation_type_aggregated_barplot)
+
+```
+
+Alternative 2: Treemap
+
+```{r echo=FALSE}
+#' alternatively, make a treemap
+library(treemapify)
+affilition_type_aggregated_treemap <- ggplot(pm_data_affiliation_aggregated,
+                                                    aes(area = n, 
+                                                        label = perc,
+                                                        fill = author_affiliation_type
+                                                        ),
+                                                    color = 'black',
+                                                    stroke = 5,
+                                                    stat = 'identity',
+                                                    color = 'black'
+                                                    ) + 
+  geom_treemap() +
+  geom_treemap_text(place = 'centre') +
+  labs(title = 'Aggregated number of studies per author affiliation type') +
+  scale_color_tableau()
+
+        
+
+plot(affilition_type_aggregated_treemap)
+
+```
+
