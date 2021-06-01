@@ -292,7 +292,7 @@ pm_data_collab_type <- pm_data_mutated %>%
   arrange(publication_year) %>%
   mutate(collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
                                          'academic', 
-                                         'hybrid')
+                                         'Other collabs')
   )
   ) %>% 
   count(publication_year, collab_type, name = 'total_publications')
@@ -325,7 +325,7 @@ plot(collab_type_trend)
  #Plot the data with and without FMD
 library(patchwork)
 
-affiliation_type_by_year_with_and_without_FMD_barplot <- plot(affiliation_type_by_year_no_FMD_barplot/affiliation_type_by_year_wFMD_barplot)
+collab_type_trend <- plot(affiliation_type_by_year_no_FMD_barplot/affiliation_type_by_year_wFMD_barplot)
 
 #' save the plot
 ggsave(filename = './figs/affiliation_type_by_year_with_and_without_FMD_barplot.jpg', 
