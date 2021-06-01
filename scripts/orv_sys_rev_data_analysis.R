@@ -2,6 +2,8 @@ library('tidyverse')
 library('ggthemes')
 library('scales')
 library('janitor')
+library('forcats')
+library('stringr')
 
 #load the data and remove the Kobotoolbox meaningless variables 
 review_data_wide <- readxl::read_excel('./data/final_data/2021_02_25_wide.xlsx') 
@@ -14,34 +16,18 @@ review_data_compact <- readxl::read_excel('./data/final_data/2021_02_25_compact.
 
 
 review_data_wide_cleaned <- review_data_wide %>% 
+    filter(publication_year < 2020) %>% #remove 2020 because the search was done in Jan 2020 so it gives the illusion that there were few papers in 2020.
     select(-c('start':'phonenumber'),
            -c('__version__':'_notes')
-           # -author_affiliation_type,
-           # -country_studied,
-           # -disease,
-           # -objectives,
-           # -model_structure,
-           # -parametrization,
-           # -validation,
-           # -intervention_modelled,
-           # -outcome_measured
            ) %>% 
     clean_names() %>% 
     remove_empty('cols')
 
 review_data_compact_cleaned <- review_data_compact %>% 
+  filter(publication_year < 2020) %>% #remove 2020 because the search was done in Jan 2020 so it gives the illusion that there were few papers in 2020.
   select(-c('start':'phonenumber'),
          -c('__version__':'_notes')
-         # -author_affiliation_type,
-         # -country_studied,
-         # -disease,
-         # -objectives,
-         # -model_structure,
-         # -parametrization,
-         # -validation,
-         # -intervention_modelled,
-         # -outcome_measured
-  ) %>% 
+         ) %>% 
   clean_names() %>% 
   remove_empty('cols')
 
@@ -85,7 +71,6 @@ pm_data_affiliation_aggregated <- pm_data_mutated %>%
     arrange(desc(n))
  
     
-    
 affiliation_type_aggregated_barplot <- pm_data_affiliation_aggregated %>%
     ggplot() + geom_bar(aes(x = reorder(author_affiliation_type, perc),
                             y = perc,
@@ -106,8 +91,8 @@ plot(affiliation_type_aggregated_barplot)
 
 
 #' Save the plot    
-ggsave(filename = './figs/affilition_type_aggregated_barplot.jpg', 
-       plot = affilition_type_aggregated_barplot,
+ggsave(filename = './figs/affiliation_type_aggregated_barplot.jpg', 
+       plot = affiliation_type_aggregated_barplot,
        width = 10.5,
        height = 6.5,
        units = 'in'
@@ -224,8 +209,13 @@ pm_data_affiliation_type_wFMD_by_year <- pm_data_mutated %>%
 
 
 #Plot the affiliation type over time (with FMD)
+
+ggplot(data = pm_data_affiliation_type_wFMD_by_year, 
+       aes(x = publication_year)) + 
+  geom_histogram(aes(color = author_affiliation_type), binwidth = 5) 
+
 affiliation_type_by_year_wFMD_barplot <- ggplot(data = pm_data_affiliation_type_wFMD_by_year) + 
-  geom_bar(aes(x = publication_year, 
+  geom_histogram(aes(x = publication_year, 
                y = n, 
                fill = author_affiliation_type
   ),
@@ -250,37 +240,87 @@ ggsave(filename = './figs/affiliation_type_by_year_with_FMD_barplot.jpg',
 
 
 #' Count the number of each author affiliation type per year (excluding FMD)
-pm_data_affiliation_type_no_FMD_by_year <- pm_data_mutated %>% 
-  arrange(publication_year) %>% 
-  filter(disease != 'FMD') %>% 
-  group_by(publication_year, author_affiliation_type) %>% 
-  count(publication_year, author_affiliation_type)
+# pm_data_affiliation_type_no_FMD_no_academic_aff <- pm_data_mutated %>% 
+#   arrange(publication_year) %>% 
+#   filter(disease != 'FMD', author_affiliation_type !='academic_institutions') %>% 
+#   group_by(publication_year, author_affiliation_type) %>% 
+#   count(publication_year, author_affiliation_type)
 
 
 #Plot the affiliation type over time (with FMD)
-affiliation_type_by_year_no_FMD_barplot <- ggplot(data = pm_data_affiliation_type_no_FMD_by_year) + 
-  geom_bar(aes(x = publication_year, 
-               y = n, 
-               fill = author_affiliation_type
-  ),
-  color = 'black',
-  stat = 'identity',
-  position = 'stack'
-  ) + 
-  labs(title = 'Author affiliation composition per year (without FMD)',
+#' pm_data_affiliation_type_no_FMD_no_academic_aff_plot <- ggplot(data = pm_data_affiliation_type_no_FMD_no_academic_aff) + 
+#'   # geom_point(aes(x = publication_year, 
+#'   #              y = n, 
+#'   #              shape = author_affiliation_type,
+#'   #              color = author_affiliation_type,
+#'   #              size = 1.5
+#'   # )
+#'   # ) + 
+#'   geom_line(data = pm_data_affiliation_type_no_FMD_by_year %>% 
+#'               filter(author_affiliation_type !='academic_institutions'), 
+#'             aes(x = publication_year, 
+#'                  y = n, 
+#'                  color = author_affiliation_type
+#'   ),
+#'   size = 1
+#'   ) +
+#'   scale_x_continuous(expand = c(0, 0), limits = c(min(pm_data_affiliation_type_no_FMD_no_academic_aff$publication_year), 2020)) + 
+#'   scale_y_continuous(expand = expansion(mult = c(0, 0.1)), limits = c(0, max(pm_data_affiliation_type_no_FMD_no_academic_aff$n))) +
+#'   labs(title = 'Author affiliation composition per year (without FMD)',
+#'        x = 'Year',
+#'        y = 'Number of publications') +
+#'   scale_color_tableau()
+#' 
+#' plot(pm_data_affiliation_type_no_FMD_no_academic_aff_plot)
+#' 
+#' #' save the plot
+#' ggsave(filename = './figs/affiliation_type_by_year_no_FMD_barplot.jpg', 
+#'        plot = affiliation_type_by_year_no_FMD_barplot,
+#'        width = 10.5,
+#'        height = 6.5,
+#'        units = 'in'
+#'        )
+
+
+
+
+#' Split the collaborations into purely academic and hybrid
+#' Count the number of each author affiliation type per year 
+#' Final figure should be justaposed with information on outbreaks from https://www.cfr.org/timeline/major-epidemics-modern-era
+
+pm_data_collab_type <- pm_data_mutated %>% 
+  arrange(publication_year) %>%
+  mutate(collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
+                                         'academic', 
+                                         'hybrid')
+  )
+  ) %>% 
+  count(publication_year, collab_type, name = 'total_publications')
+
+#plot
+collab_type_trend <- ggplot(data = pm_data_collab_type) + 
+  geom_bar(aes(x = publication_year,
+               y = total_publications,
+               fill = collab_type
+               ),
+           color = 'black',
+           stat = 'identity',
+           position =   position_fill()  
+             ) +
+  scale_x_continuous(breaks = seq(1971, 2020, 2),
+                     labels = seq(1971, 2020, 2)
+                     ) +
+  # scale_y_continuous(breaks = seq(0, 50, 2),
+  #                    labels = seq(0, 50, 2)) +
+  labs(title = 'Publications by collaboration type',
        x = 'Year',
-       y = 'Number of publications') +
-  scale_color_tableau()
+       y = 'Proportion of publications',
+       fill = 'Collaboration type' 
+         ) +
+  theme_minimal()
 
-plot(affiliation_type_by_year_no_FMD_barplot)
+plot(collab_type_trend)
 
-#' save the plot
-ggsave(filename = './figs/affiliation_type_by_year_no_FMD_barplot.jpg', 
-       plot = affiliation_type_by_year_no_FMD_barplot,
-       width = 10.5,
-       height = 6.5,
-       units = 'in'
-       )
 
  #Plot the data with and without FMD
 library(patchwork)
