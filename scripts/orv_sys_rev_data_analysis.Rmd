@@ -10,14 +10,19 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r echo=FALSE, message=FALSE}
+#' load packages
 library('tidyverse')
 library('ggthemes')
 library('scales')
 library('janitor')
 library('forcats')
 library('stringr')
+```
 
-#load the data and remove the Kobotoolbox meaningless variables 
+
+```{r echo=FALSE, message=FALSE}
+
+#load the data and remove extraneous variables 
 review_data_wide <- readxl::read_excel(normalizePath('../data/final_data/2021_02_25_wide.xlsx')) 
 review_data_compact <- readxl::read_excel(normalizePath('../data/final_data/2021_02_25_compact.xlsx')) 
 
@@ -46,23 +51,25 @@ review_data_compact_cleaned <- review_data_compact %>%
 
 # Primary objectives 
 
-## 1. Is modelling being used to inform policy? 
+1. Is modelling being used to inform outbreak response policy-making? 
++ How are the results distributed according to collaboration type?
 
-Alternative 1: Bar plot
+Note that we do not include FMD in all the primary analyses. We only use it for secondary comparisons.
+
 ```{r echo=FALSE}
-#' 1A. Get relevant variables. NB: pm = policy making
+#' 1A. Select variables relevant to the policy-making ('pm') analysis. 
 pm_data <- review_data_compact_cleaned %>%
   select(
     paper_title,
     publication_year,
     starts_with("objectives"),
     starts_with("author_affiliation_type"),
-    starts_with('disease'),
+  #  starts_with('disease'),
     author_in_country_studied,
     outbreak_type,
     modelling_timing,
     data_used
-  )
+  )  
 
 # 1B. Create the author affiliation types and reword the string NA
 pm_data_mutated <- pm_data %>%
@@ -83,6 +90,11 @@ pm_data_affiliation_aggregated <- pm_data_mutated %>%
     mutate(perc = round(n/sum(n)*100, 1)) %>% 
     arrange(desc(n))
  
+```
+
++ What has been the trend in collaboration over the years?
+
+```{r echo=FALSE}
     
 affiliation_type_aggregated_barplot <- pm_data_affiliation_aggregated %>%
     ggplot() + geom_bar(aes(x = reorder(author_affiliation_type, perc),
@@ -93,40 +105,159 @@ affiliation_type_aggregated_barplot <- pm_data_affiliation_aggregated %>%
                         color = 'black'
                         ) +
     scale_y_continuous(breaks = seq(0, 60, 5),
-                       labels = seq(0, 60, 5)) +
-    labs(title = 'Aggregated number of studies per author affiliation type', 
-         x = 'Author affiliation type', 
+                       labels = seq(0, 60, 5)
+                       ) +
+    labs(title = 'Percentage of studies per collaboration type', 
+         x = '', 
          y = 'Percent') + 
- #   coord_polar(theta = "x", direction = -1) +
-    scale_color_tableau()
+  coord_flip() +
+  theme_minimal() +
+  theme(legend.position = 'none')
 
 plot(affiliation_type_aggregated_barplot)
 
 ```
 
-Alternative 2: Treemap
+**Alternative 1:** Stacked area plot
+```{r echo=FALSE}
+#' Count the number of each author affiliation type per year (including FMD)
+collab_type_by_year <- pm_data_mutated %>% 
+  arrange(publication_year) %>%
+  mutate(collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
+                                         'Academic', 
+                                         'Other collabs')
+  )
+  ) %>% 
+  count(publication_year, collab_type, name = 'total_publications')
+
+#plot
+collab_type_by_year_plot <- ggplot(data = collab_type_by_year) + 
+  geom_area(aes(x = publication_year,
+               y = total_publications,
+               fill = collab_type
+               ),
+           color = 'black',
+           stat = 'identity' 
+             ) +
+  scale_x_continuous(breaks = seq(1971, 2020, 5),
+                     labels = seq(1971, 2020, 5)
+                     ) +
+  scale_y_continuous(breaks = seq(0, 50, 2),
+                     labels = seq(0, 50, 2)) +
+  labs(title = 'Number of publications per collaboration type',
+       x = 'Year',
+       y = 'Number of publications',
+       fill = 'Collaboration type' 
+         ) +
+  theme_minimal()
+
+plot(collab_type_by_year_plot)
+
+
+```
+**Alternative 2A:** A stacked bar chart of the total publications per collaboration type over time.
 
 ```{r echo=FALSE}
-#' alternatively, make a treemap
-library(treemapify)
-affilition_type_aggregated_treemap <- ggplot(pm_data_affiliation_aggregated,
-                                                    aes(area = n, 
-                                                        label = perc,
-                                                        fill = author_affiliation_type
-                                                        ),
-                                                    color = 'black',
-                                                    stroke = 5,
-                                                    stat = 'identity',
-                                                    color = 'black'
-                                                    ) + 
-  geom_treemap() +
-  geom_treemap_text(place = 'centre') +
-  labs(title = 'Aggregated number of studies per author affiliation type') +
-  scale_color_tableau()
 
-        
+collab_type_by_year_plot <- ggplot(data = collab_type_by_year) + 
+  geom_bar(aes(x = publication_year,
+               y = total_publications,
+               fill = collab_type
+               ),
+           color = 'black',
+           stat = 'identity',
+           position = position_stack()  
+             ) +
+  geom_text(data = collab_type_by_year,
+            aes(x = publication_year,
+                y = total_publications,
+               label = total_publications
+                ),
+            size = 2,
+            color = 'black',
+            fontface = 'bold',
+           stat = 'identity',
+           position = position_stack(vjust = 0.5)
+            ) +
+  scale_fill_manual(values = c('tan1', 'turquoise1')) +
+  scale_x_continuous(breaks = seq(1971, 2020, 5),
+                     labels = seq(1971, 2020, 5)
+                     ) +
+  labs(title = 'Proportion of publications by collaboration type',
+       x = 'Year',
+       y = 'Proportion of publications',
+       fill = 'Collaboration type' 
+         ) +
+  theme_minimal()
 
-plot(affilition_type_aggregated_treemap)
+plot(collab_type_by_year_plot)
+
+```
+
+**Alternative 2B:** A bar chart with each bar representing a proportion of the total publications for that year.
+
+```{r echo=FALSE}
+
+collab_type_by_year_plot <- ggplot(data = collab_type_by_year) + 
+  geom_bar(aes(x = publication_year,
+               y = total_publications,
+               fill = collab_type
+               ),
+           color = 'black',
+           stat = 'identity',
+           position = position_fill()  
+             ) +
+  # geom_text(data = collab_type_by_year,
+  #           aes(x = publication_year,
+  #               y = total_publications,
+  #              label = total_publications
+  #               ),
+  #           size = 2,
+  #           color = 'black',
+  #           fontface = 'bold',
+  #          stat = 'identity',
+  #          position = position_stack(vjust = 0.5)
+  #           ) +
+  scale_fill_manual(values = c('tan1', 'turquoise1')) +
+  scale_x_continuous(breaks = seq(1971, 2020, 5),
+                     labels = seq(1971, 2020, 5)
+                     ) +
+  labs(title = 'Proportion of publications by collaboration type',
+       x = 'Year',
+       y = 'Proportion of publications',
+       fill = 'Collaboration type' 
+         ) +
+  theme_minimal()
+
+plot(collab_type_by_year_plot)
+```
+
+**Alternative 3:** A line plot of the number of collaboration types over time
+```{r echo=FALSE}
+
+
+collab_type_by_year_line_plot <- ggplot(data = collab_type_by_year) +
+  geom_point(aes(x = publication_year,
+               y = log10(total_publications),
+               shape = collab_type,
+               color = collab_type
+               ),
+             size = 2
+             ) +
+  geom_line(data = collab_type_by_year, 
+            aes(x = publication_year,
+                 y = log10(total_publications),
+                linetype = collab_type,
+               color = collab_type
+                ),
+            size = 0.5
+            ) +
+  # geom_smooth(aes(x = publication_year,
+  #              y = total_publications), 
+  #             method = 'glm') +
+  theme_minimal()
+
+plot(collab_type_by_year_line_plot)
 
 ```
 

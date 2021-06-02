@@ -130,7 +130,7 @@ ggsave(filename = './figs/affilition_type_aggregated_treemap.jpg',
 )
 
 
-#' Count the number of each affiliation type per year (including FMD)
+#' Count the number of each affiliation type per year for only FMD papers
 pm_data_affiliation_type_FMD_only_by_year <- pm_data_mutated %>% 
   arrange(publication_year) %>% 
   filter(disease == 'FMD') %>% 
