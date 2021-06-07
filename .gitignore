@@ -44,3 +44,11 @@ vignettes/*.pdf
 *.pdf
 
 figs/
+
+data/final_data/raw_data/
+
+*.xlsx
+
+*.rds
+
+*.html
