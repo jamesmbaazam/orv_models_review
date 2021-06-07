@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r echo=FALSE, message=FALSE}
 #' load packages
 library('tidyverse')
+library('readr')
 library('ggthemes')
 library('scales')
 library('janitor')
@@ -21,38 +22,14 @@ library('stringr')
 
 
 ```{r echo=FALSE, message=FALSE}
-
-#load the data and remove extraneous variables 
-review_data_wide <- readxl::read_excel(normalizePath('../data/final_data/2021_02_25_wide.xlsx')) 
-review_data_compact <- readxl::read_excel(normalizePath('../data/final_data/2021_02_25_compact.xlsx')) 
-
-
-############################################
-#Data cleaning
-############################################
-
-
-review_data_wide_cleaned <- review_data_wide %>% 
-    filter(publication_year < 2020) %>% #remove 2020 because the search was done in Jan 2020 so it gives the illusion that there were few papers in 2020.
-    select(-c('start':'phonenumber'),
-           -c('__version__':'_notes')
-           ) %>% 
-    clean_names() %>% 
-    remove_empty('cols')
-
-review_data_compact_cleaned <- review_data_compact %>% 
-  filter(publication_year < 2020) %>% #remove 2020 because the search was done in Jan 2020 so it gives the illusion that there were few papers in 2020.
-  select(-c('start':'phonenumber'),
-         -c('__version__':'_notes')
-         ) %>% 
-  clean_names() %>% 
-  remove_empty('cols')
+#' Load the script that cleans the data and saves it; this should be run each time, just in case something has changed in the data cleaning process
+source(normalizePath('./scripts/data_cleaning/orv_models_review_data_cleaning.R'))
 ```
 
 # Exploratory Data Analysis
-1. How many publications per year?
-2. Collaborations (aggregated)
-3. Which countries are being studied? (author affiliation vs country studied)
+1. Publications per year
+2. Distribution of collaborations across types (aggregated)
+3. Countries/settings being studied (author affiliation vs country studied)
 
 
 What science is being inferred from models?
@@ -113,8 +90,6 @@ plot(modelling_objectives_n_timing_plot)
 
 
 
-
-
 ```{r table2, echo=FALSE, results = 'asis'} 
 max_pub_year <- review_data_wide_cleaned %>% 
     count(publication_year) %>% 
@@ -139,18 +114,7 @@ Note that we do not include FMD in all the primary analyses. We only use it for 
 
 ```{r echo=FALSE}
 #' 1A. Select variables relevant to the policy-making ('pm') analysis. 
-pm_data <- review_data_compact_cleaned %>%
-  select(
-    paper_title,
-    publication_year,
-    starts_with("objectives"),
-    starts_with("author_affiliation_type"),
-  #  starts_with('disease'),
-    author_in_country_studied,
-    outbreak_type,
-    modelling_timing,
-    data_used
-  )  
+pm_data <- policy_making_data
 
 # 1B. Create the author affiliation types and reword the string NA
 pm_data_mutated <- pm_data %>%
@@ -199,7 +163,6 @@ plot(affiliation_type_aggregated_barplot)
 
 ```
 
-**Alternative 1:** Stacked area plot
 ```{r echo=FALSE}
 #' Count the number of each author affiliation type per year (including FMD)
 collab_type_by_year <- pm_data_mutated %>% 
@@ -207,80 +170,31 @@ collab_type_by_year <- pm_data_mutated %>%
   mutate(collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
                                          'Academic', 
                                          'Other collabs')
-  )
+                                 )
   ) %>% 
-  count(publication_year, collab_type, name = 'total_publications')
-
-#plot
-collab_type_by_year_plot <- ggplot(data = collab_type_by_year) + 
-  geom_area(aes(x = publication_year,
-               y = total_publications,
-               fill = collab_type
-               ),
-           color = 'black',
-           stat = 'identity' 
-             ) +
-  scale_x_continuous(breaks = seq(1971, 2020, 5),
-                     labels = seq(1971, 2020, 5)
-                     ) +
-  scale_y_continuous(breaks = seq(0, 50, 2),
-                     labels = seq(0, 50, 2)) +
-  labs(title = 'Number of publications per collaboration type',
-       x = 'Year',
-       y = 'Number of publications',
-       fill = 'Collaboration type' 
-         ) +
-  theme_minimal()
-
-plot(collab_type_by_year_plot)
+  count(publication_year, 
+        collab_type, 
+        name = 'total_publications'
+        )
 
 
-```
-**Alternative 2A:** A stacked bar chart of the total publications per collaboration type over time.
+collab_type_by_year_mod <- collab_type_by_year %>% 
+  mutate(year_aggreg = as_factor(ifelse(publication_year < 2005, '<2005', publication_year)))
 
-```{r echo=FALSE}
-
-collab_type_by_year_plot <- ggplot(data = collab_type_by_year) + 
-  geom_bar(aes(x = publication_year,
-               y = total_publications,
-               fill = collab_type
-               ),
-           color = 'black',
-           stat = 'identity',
-           position = position_stack()  
-             ) +
-  geom_text(data = collab_type_by_year,
-            aes(x = publication_year,
-                y = total_publications,
-               label = total_publications
-                ),
-            size = 2,
-            color = 'black',
-            fontface = 'bold',
-           stat = 'identity',
-           position = position_stack(vjust = 0.5)
-            ) +
-  scale_fill_manual(values = c('tan1', 'turquoise1')) +
-  scale_x_continuous(breaks = seq(1971, 2020, 5),
-                     labels = seq(1971, 2020, 5)
-                     ) +
-  labs(title = 'Number of publications by collaboration type',
-       x = 'Year',
-       y = 'Proportion of publications',
-       fill = 'Collaboration type' 
-         ) +
-  theme_minimal()
-
-plot(collab_type_by_year_plot)
+collab_type_by_year_mod_count <- collab_type_by_year_mod %>% 
+  count(year_aggreg, 
+        collab_type, 
+        name = 'total_publications'
+        )
 
 ```
 
-**Alternative 2B:** A bar chart with each bar representing a proportion of the total publications for that year.
+A bar chart with each bar representing a proportion of the total publications for that year.
 
 ```{r echo=FALSE}
 
-collab_type_by_year_plot <- ggplot(data = collab_type_by_year) + 
-  geom_bar(aes(x = publication_year,
+collab_type_by_year_plot <- ggplot(data = collab_type_by_year_mod_count) + 
+  geom_bar(aes(x = year_aggreg,
                y = total_publications,
                fill = collab_type
                ),
@@ -288,17 +202,6 @@ collab_type_by_year_plot <- ggplot(data = collab_type_by_year) +
            stat = 'identity',
            position = position_fill()  
              ) +
-  # geom_text(data = collab_type_by_year,
-  #           aes(x = publication_year,
-  #               y = total_publications,
-  #              label = total_publications
-  #               ),
-  #           size = 2,
-  #           color = 'black',
-  #           fontface = 'bold',
-  #          stat = 'identity',
-  #          position = position_stack(vjust = 0.5)
-  #           ) +
   scale_fill_manual(values = c('tan1', 'turquoise1')) +
   scale_x_continuous(breaks = seq(1971, 2020, 5),
                      labels = seq(1971, 2020, 5)
@@ -311,32 +214,6 @@ collab_type_by_year_plot <- ggplot(data = collab_type_by_year) +
   theme_minimal()
 
 plot(collab_type_by_year_plot)
-```
-
-**Alternative 3:** A line plot of the number of collaboration types over time
-```{r echo=FALSE}
-collab_type_by_year_line_plot <- ggplot(data = collab_type_by_year) +
-  geom_point(aes(x = publication_year,
-               y = log10(total_publications),
-               shape = collab_type,
-               color = collab_type
-               ),
-             size = 2
-             ) +
-  geom_line(data = collab_type_by_year, 
-            aes(x = publication_year,
-                 y = log10(total_publications),
-                linetype = collab_type,
-               color = collab_type
-                ),
-            size = 0.5
-            ) +
-  # geom_smooth(aes(x = publication_year,
-  #              y = total_publications), 
-  #             method = 'glm') +
-  theme_minimal()
-
-plot(collab_type_by_year_line_plot)
 
 ```
 
@@ -345,26 +222,7 @@ plot(collab_type_by_year_line_plot)
 
 ```{r echo=FALSE}
 #' Select the variables related to vaccination 
-vax_vars_wide_data <- review_data_wide_cleaned %>% 
-    select(paper_title, 
-           publication_year,
-           starts_with('disease_'),
-           outbreak_type,
-           starts_with('intervention_modelled_'),
-           vax_modelled_with_non_vax,
-           is_vax_effective
-           ) 
-
-#the long data
-vax_vars_data_compact <- review_data_compact_cleaned %>% 
-  select(paper_title, 
-         publication_year,
-         starts_with('disease'),
-         outbreak_type,
-         starts_with('intervention_modelled'),
-         vax_modelled_with_non_vax,
-         is_vax_effective
-  ) %>% 
+vax_vars_wide_data <- vax_impact_data %>% 
   filter(vax_modelled_with_non_vax == 'yes', 
          disease != 'FMD'
          )
