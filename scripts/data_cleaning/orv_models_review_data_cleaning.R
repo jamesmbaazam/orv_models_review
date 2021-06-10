@@ -124,43 +124,22 @@ review_data_wide_to_long <- review_data_compact_cleaned %>%
     separate_rows(intervention_modelled, sep = ',') %>% 
     separate_rows(outcome_measured, sep = ',')
 
-
-review_data_long_cleaned <- review_data_wide_to_long %>% 
+review_data_long_cleaned_with_fmd <- review_data_wide_to_long %>% 
     filter(outcome_measured != 'outcome_other') %>% 
     filter(intervention_modelled != 'intervention_other')
 
 
-#count the number of unique interventions modelled
-review_data_long_cleaned %>% 
-    group_by(paper_title) %>% 
-    distinct(intervention_modelled) %>% 
-    count(intervention_modelled) %>% 
-    ungroup() %>% 
-    group_by(intervention_modelled) %>% 
-    count(intervention_modelled) %>% 
-    arrange(desc(n)) %>% 
-    View()
-
-
-#count the number of unique outcomes measured
-review_data_long_cleaned %>% 
-    group_by(paper_title) %>% 
-    distinct(outcome_measured) %>% 
-    count(outcome_measured) %>% 
-    ungroup() %>% 
-    group_by(outcome_measured) %>% 
-    count(outcome_measured) %>% 
-    arrange(desc(n)) %>% 
-    View()
-
-
-
+review_data_long_cleaned_no_fmd <- review_data_wide_to_long %>% 
+    filter(disease != 'fmd') %>% 
+    filter(outcome_measured != 'outcome_other') %>% 
+    filter(intervention_modelled != 'intervention_other')
 
 
 #View(review_data_compact_cleaning_step4)
 
 #save the cleaned data
-saveRDS(review_data_long_cleaned, file = './data/final_data/cleaned_data/review_data_long_cleaned.rds')
+saveRDS(review_data_long_cleaned_with_fmd, file = './data/final_data/cleaned_data/review_data_long_cleaned_with_fmd.rds')
+saveRDS(review_data_long_cleaned_no_fmd, file = './data/final_data/cleaned_data/review_data_long_cleaned_no_fmd.rds')
 
 
 
