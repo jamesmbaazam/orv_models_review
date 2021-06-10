@@ -1,3 +1,4 @@
+library('sjmisc')
 library('tidyverse')
 library('ggthemes')
 library('scales')
@@ -6,11 +7,12 @@ library('forcats')
 library('stringr')
 
 
+
 #load the data and remove extraneous variables 
-review_data_wide <- readxl::read_excel('./data/final_data/raw_data/2021_02_25_wide.xlsx', 
+review_data_wide <- readxl::read_excel('./data/final_data/raw_data/2021-06-10_wide.xlsx', 
                                        na = c('', 'NA')
                                        )
-review_data_compact <- readxl::read_excel('./data/final_data/raw_data/2021-06-07_compact.xlsx', 
+review_data_compact <- readxl::read_excel('./data/final_data/raw_data/2021-06-10_compact.xlsx', 
                                           na = c('', 'NA')
                                           )
 
@@ -18,22 +20,30 @@ review_data_compact <- readxl::read_excel('./data/final_data/raw_data/2021-06-07
 ############################################
 #Data cleaning
 ############################################
+
+# review_data_wide %>% pivot_longer(everything(),
+#                                   names_to = c('country_studied', '.value'),
+#                                   names_sep = '_'
+#                                   )
+
+
+
+
 #Step 1
 #' Remove extraneous variables and clean the column names
 #' the compact data is the same as above except that there are multiple entries per cell;
 #' because that is how KoboToolbox saves multiple answer questions
 review_data_compact_cleaning_step1 <- review_data_compact %>% 
     filter(publication_year < 2020) %>% #remove 2020 because the search was done in Jan 2020 so it gives the illusion that there were few papers in 2020.
-    select(-c('start':'phonenumber'),
-           -c('__version__':'_index')
-    ) %>% 
+    select(-'_index') %>% 
     clean_names() %>% 
     remove_empty('cols')
 
 #' Step 2
 #' Rename/shorten some of the entries and move the entries in "other" and "multiple" columns to the "main" column
 review_data_compact_cleaning_step2 <- review_data_compact_cleaning_step1 %>% 
-    mutate(objectives = case_when(objectives == 'assess_impact_future' ~ 'future', 
+    mutate(disease = str_to_lower(disease), 
+           objectives = case_when(objectives == 'assess_impact_future' ~ 'future', 
                                   objectives == 'assess_impact_past' ~ 'past', 
                                   objectives == 'assess_impact_past assess_impact_future' ~ 'both'
                                   ),
@@ -44,7 +54,7 @@ review_data_compact_cleaning_step2 <- review_data_compact_cleaning_step1 %>%
                                                  ),
            country_studied = as_factor(case_when(country_studied == 'none' ~ 'none',
                                        country_studied == 'multiple' ~ country_studied_multiple,
-                                       country_studied == 'other' ~ country_studied_other,
+                                       country_studied == 'other' ~ str_to_lower(str_replace_all(country_studied_other, ' ', '_')),
                                        country_studied != 'none' & country_studied != 'multiple' & country_studied != 'other' ~ country_studied
                                      )),
            is_vax_effective = as_factor(if_else(is.na(is_vax_effective),
@@ -89,19 +99,22 @@ review_data_compact_cleaning_step3 <- review_data_compact_cleaning_step2 %>%
 
 #View(review_data_compact_cleaning_step3)
 
-#' Step 4
+#' Step 3A
 #Removed the "other" and "multiple" columns
-review_data_compact_cleaning_step4 <- review_data_compact_cleaning_step3 %>% 
+review_data_compact_cleaned <- review_data_compact_cleaning_step3 %>% 
     select(-contains('othe'), #for some reason, one column has "othe" instead of "other"
            -country_studied_multiple
     ) 
+#View(review_data_compact_cleaned)
 
-#View(review_data_compact_cleaning_step4)
+#save the cleaned data
+saveRDS(review_data_compact_cleaned, file = './data/final_data/cleaned_data/review_data_compact_cleaned.rds')
 
 
-#' Step 5
+
+#' Step 4
 #Separate columns with multiple entries into single rows
-review_data_compact_cleaning_step5 <- review_data_compact_cleaning_step4 %>% 
+review_data_wide_to_long <- review_data_compact_cleaned %>% 
     separate_rows(author_affiliation_type, sep = ' ') %>% 
     separate_rows(disease, sep = ' ') %>% 
     separate_rows(model_structure, sep = ' ') %>% 
@@ -109,13 +122,45 @@ review_data_compact_cleaning_step5 <- review_data_compact_cleaning_step4 %>%
     separate_rows(validation, sep = ' ') %>% 
     separate_rows(country_studied, sep = ' ') %>% 
     separate_rows(intervention_modelled, sep = ',') %>% 
-    separate_rows(outcome_measured, sep = ',') 
+    separate_rows(outcome_measured, sep = ',')
 
-#View(review_data_compact_cleaning_step5)
 
+review_data_long_cleaned <- review_data_wide_to_long %>% 
+    filter(outcome_measured != 'outcome_other') %>% 
+    filter(intervention_modelled != 'intervention_other')
+
+
+#count the number of unique interventions modelled
+review_data_long_cleaned %>% 
+    group_by(paper_title) %>% 
+    distinct(intervention_modelled) %>% 
+    count(intervention_modelled) %>% 
+    ungroup() %>% 
+    group_by(intervention_modelled) %>% 
+    count(intervention_modelled) %>% 
+    arrange(desc(n)) %>% 
+    View()
+
+
+#count the number of unique outcomes measured
+review_data_long_cleaned %>% 
+    group_by(paper_title) %>% 
+    distinct(outcome_measured) %>% 
+    count(outcome_measured) %>% 
+    ungroup() %>% 
+    group_by(outcome_measured) %>% 
+    count(outcome_measured) %>% 
+    arrange(desc(n)) %>% 
+    View()
+
+
+
+
+
+#View(review_data_compact_cleaning_step4)
 
 #save the cleaned data
-saveRDS(review_data_compact_cleaning_step4, file = './data/final_data/cleaned_data/review_data_compact_cleaned.rds')
+saveRDS(review_data_long_cleaned, file = './data/final_data/cleaned_data/review_data_long_cleaned.rds')
 
 
 
@@ -123,7 +168,7 @@ saveRDS(review_data_compact_cleaning_step4, file = './data/final_data/cleaned_da
 #' Select the necessary variables for the various major analyses and save them
 #' 
 #' 1. Policy-making related questions
-pm_data <- review_data_compact_cleaning_step4 %>%
+pm_data <- review_data_compact_cleaned %>%
     select(
         paper_title,
         publication_year,
@@ -158,7 +203,7 @@ saveRDS(policy_making_data, file = './data/final_data/cleaned_data/policy_making
 #' 
 #' 
 #' Select the variables related to vaccination 
-vax_impact_data <- review_data_compact_cleaning_step4 %>% 
+vax_impact_data <- review_data_compact_cleaned %>% 
     select(paper_title, 
            publication_year,
            disease,
@@ -180,8 +225,14 @@ saveRDS(vax_impact_data_final, file = './data/final_data/cleaned_data/vax_impact
 
 
 
-
-
+# rm(review_data_compact, 
+#    review_data_compact_cleaning_step1, 
+#    review_data_compact_cleaning_step2,
+#    review_data_compact_cleaning_step3,
+#    review_data_compact_cleaning_step4,
+#    pm_data,
+#    vax_impact_data_final
+#    )
 
 
 
