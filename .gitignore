@@ -52,3 +52,5 @@ data/final_data/raw_data/
 *.rds
 
 *.html
+
+*.docx
