@@ -2,7 +2,8 @@
 title: "Systematic review of outbreak response models"
 author: "James Azam"
 date: "01/06/2021"
-output: html_document
+output:
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -18,17 +19,22 @@ library('scales')
 library('janitor')
 library('forcats')
 library('stringr')
+library('countrycode')
 ```
 
 
-```{r echo=FALSE, message=FALSE}
-#' Load the script that cleans the data and saves it; 
-#' this should be run each time, just in case something has changed in the data cleaning process;
-#' THe script clears the environment after cleaning the data
-source(normalizePath('./scripts/data_cleaning/orv_models_review_data_cleaning.R'))
+```{r echo=FALSE}
+# Sets the working directory for subsequent chunks, but not this chunk
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
 ```
 
 ```{r echo=FALSE}
+# Load the script that cleans the data and saves it; 
+# this should be run each time, just in case something has changed in the data cleaning process;
+# The script clears the environment after cleaning the data
+source('./scripts/data_cleaning/orv_models_review_data_cleaning.R')
+
 #' Load the cleaned data 
 
 long_data <- read_rds(normalizePath('./data/final_data/cleaned_data/review_data_long_cleaned.rds'))
@@ -120,7 +126,12 @@ modelling_objectives_by_outbreak_type <- modelling_objectives_by_outbreak_type_d
   group_by(objectives) %>% 
   count(objectives, outbreak_type)
 
-knitr::kable(modelling_objectives_by_outbreak_type)
+knitr::kable(modelling_objectives_by_outbreak_type, 
+             col.names = c('Objective type', 
+                           'Outbreak type', 
+                           'Number of studies'
+                           )
+             ) 
 
 modelling_objectives_n_timing_plot <- ggplot(data = modelling_objectives_by_outbreak_type) + 
   geom_bar(aes(y = n,
@@ -157,14 +168,16 @@ disease_studied_count <- long_data_no_fmd %>%
   ungroup() %>%
   count(disease, sort = T) 
 
-knitr::kable(disease_studied_count)
+knitr::kable(disease_studied_count, col.names = c('Disease', 'Number of times'))
 
-# DIsease most studied
+# Disease most studied
 disease_studied_most <- disease_studied_count %>% 
   filter(n == max(n)) 
 
-print(disease_studied_most)
+knitr::kable(disease_studied_most)
+```
 
+```{r echo=FALSE, message=FALSE}
 
 #Tally of how many times each country has been studied
 countries_studied_count <- long_data_no_fmd %>% 
@@ -172,21 +185,49 @@ countries_studied_count <- long_data_no_fmd %>%
     distinct(country_studied) %>% 
     count(country_studied, sort = T) %>% 
     ungroup(paper_title) %>% 
-    count(country_studied, sort = T) 
+    count(country_studied, sort = T) %>% 
+    mutate(continent = countrycode(country_studied, 
+                                          destination = 'continent',
+                                          origin = 'iso2c'
+                                          ),
+           continent = case_when(is.na(continent) ~ country_studied,
+                                 !is.na(continent) ~ continent
+                                 )
+                                 
+           ) %>% 
+  mutate(continent = if_else(str_detect(continent, 'asia') == T, 'Asia',
+                               if_else(str_detect(continent, 'africa') == T, 'Africa',
+                                       continent
+                               )
+                             )
+         )
 
-knitr::kable(countries_studied_count)
+knitr::kable(countries_studied_count, col.names = c('Country/Setting', 'Number of times studied', 'Continent'))
   
 countries_studied_most <- countries_studied_count %>% 
     dplyr::filter(country_studied != 'none') %>% 
-    filter(n == max(n)) 
+    filter(n == max(n))
+    
+knitr::kable(countries_studied_most, col.names = c('Most studied country', 'Number of times studied', 'COntinent'))
 
+
+continent_studied_most <- countries_studied_count %>% 
+    dplyr::filter(continent != 'none') %>% 
+    filter(n == max(n))
+    
+knitr::kable(continent_studied_most %>% select(-country_studied), col.names = c('Most studied continent', 'Number of times studied'))
+```
+
+Summary of modes
+```{r echo=FALSE}
 knitr::kable(tibble(max_pub_year = max_pub_year$publication_year, 
                     disease_with_max_pubs = disease_studied_most$disease,
                     country_most_studied = countries_studied_most$country_studied
                     )
              )
-
 ```
+
+
 
 # Primary objectives 
 
@@ -216,7 +257,7 @@ collab_types_count <- collab_type_data %>%
     count(author_affiliation_type) %>% 
     mutate(author_affiliation_type = as_factor(author_affiliation_type))
 
-knitr::kable(author_affiliation_count)
+knitr::kable(collab_types_count)
 ```
 
 + What has been the trend in collaboration over the years?
@@ -248,27 +289,20 @@ plot(collap_types_count_barplot)
 ```{r echo=FALSE}
 #' Count the number of each author affiliation type per year (including FMD)
 collap_types_by_year <- compact_data_no_fmd %>% 
-  arrange(publication_year) %>%
-  mutate(collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
+  mutate(year_aggreg = as.numeric(ifelse(publication_year < 2006, 2005, publication_year
+                                         )
+                                  ), 
+         collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
                                          'Academic', 
                                          'Other collabs')
                                  )
-  ) %>% 
-  count(publication_year, 
-        collab_type, 
-        name = 'total_publications'
-        )
-
-
-collap_types_by_year_mod <- collap_types_by_year %>% 
-  mutate(year_aggreg = as_factor(ifelse(publication_year < 2005, '<2005', publication_year)))
-
-collap_types_by_year_mod_count <- collap_types_by_year_mod %>% 
+         ) %>% 
   count(year_aggreg, 
         collab_type, 
         name = 'total_publications'
         )
-knitr::kable(collap_types_by_year_mod_count)
+
+knitr::kable(collap_types_by_year)
 
 
 ```
@@ -276,8 +310,14 @@ knitr::kable(collap_types_by_year_mod_count)
 A bar chart with each bar representing a proportion of the total publications for that year.
 
 ```{r echo=FALSE}
+# Modify the x-axis labels to account for the lumping of the years from 2005 and below
+x_axis_labels <- as.character(seq(2005, 2020, 2))
 
-collab_type_by_year_plot <- ggplot(data = collap_types_by_year_mod_count) + 
+x_axis_labels[1] <- '<2005'
+
+
+
+collab_type_by_year_plot <- ggplot(data = collap_types_by_year) + 
   geom_bar(aes(x = year_aggreg,
                y = total_publications,
                fill = collab_type
@@ -287,15 +327,21 @@ collab_type_by_year_plot <- ggplot(data = collap_types_by_year_mod_count) +
            position = position_fill()  
              ) +
   scale_fill_manual(values = c('tan1', 'turquoise1')) +
-  # scale_x_continuous(breaks = seq(1971, 2020, 5),
-  #                    labels = seq(1971, 2020, 5)
-  #                    ) +
+  scale_x_continuous(breaks = seq(2005, 2020, 2),
+                     labels = x_axis_labels
+                     ) +
+  # geom_text(aes(x = year_aggreg, 
+  #               y = total_publications, 
+  #               label = total_publications
+  #               ),
+  #           position = position_fill(vjust = 0.6)
+  #           ) +
   labs(title = 'Proportion of publications by collaboration type',
        x = 'Year',
        y = 'Proportion of publications',
        fill = 'Collaboration type' 
          ) +
-  theme_minimal()
+  theme_minimal(base_size = 12)
 
 plot(collab_type_by_year_plot)
 
@@ -309,6 +355,8 @@ plot(collab_type_by_year_plot)
 vax_impact_categories <- compact_data_no_fmd %>% 
   filter(vax_modelled_with_non_vax == 'yes') %>% 
   count(is_vax_effective, sort = T) 
+
+knitr::kable(vax_impact_categories)
 
 ```
 
@@ -336,18 +384,18 @@ vax_impact_plot <- ggplot(data = vax_impact_categories) +
                               'yes', 
                               'the_outcomes_were_inconclusive'
                               ), 
-                   labels = c('no' = 'no', 
-                              'yes' = 'yes', 
-                              'the_outcomes_were_inconclusive' = 'inconclusive'
+                   labels = c('no' = 'No', 
+                              'yes' = 'Yes', 
+                              'the_outcomes_were_inconclusive' = 'Inconclusive'
                               )
                    ) +
   scale_fill_discrete(name = 'Vaccine impact',
-                      labels = c('no', 
-                                 'inconclusive',
-                                 'yes'
+                      labels = c('No', 
+                                 'Inconclusive',
+                                 'Yes'
                       )
                       ) +
-  labs(x = 'Vaccine is most impactful',
+  labs(x = 'Vaccination is most impactful single intervention',
        y = 'Number of studies'
        ) +
   theme_minimal(base_size = 12)
@@ -358,7 +406,7 @@ plot(vax_impact_plot)
 
 How many times each disease has been studied.
 
-```{r}
+```{r echo=FALSE}
 #count the number of unique diseases studied
 disease_studied <- long_data_no_fmd %>% 
     group_by(paper_title) %>% 
@@ -394,7 +442,7 @@ plot(diseases_plot)
 
 How many times each intervention type has been modelled.
 
-```{r}
+```{r echo=FALSE}
 #count the number of unique interventions modelled
 intervention_count <- long_data_no_fmd %>% 
     group_by(paper_title) %>% 
@@ -405,7 +453,8 @@ intervention_count <- long_data_no_fmd %>%
     count(intervention_modelled) %>% 
     arrange(desc(n)) %>% 
     ungroup() %>% 
-    mutate(intervention_modelled = as_factor(intervention_modelled))
+    mutate(intervention_modelled = as_factor(intervention_modelled)) %>% 
+    filter(intervention_modelled != 'e.g.' | intervention_modelled != 'various')
 
 intervention_count_plot <- ggplot(data = intervention_count) + 
   geom_bar(aes(x = intervention_modelled, 
@@ -419,11 +468,13 @@ intervention_count_plot <- ggplot(data = intervention_count) +
 
 plot(intervention_count_plot)
 
+knitr::kable(intervention_count)
+
 ```
 
 How many times each outcome/metric has been used
 
-```{r}
+```{r echo=FALSE}
 #count the number of unique outcomes measured
 outcome_count <- long_data_no_fmd %>% 
     group_by(paper_title) %>% 
@@ -434,7 +485,10 @@ outcome_count <- long_data_no_fmd %>%
     count(outcome_measured) %>% 
     arrange(desc(n)) %>% 
     ungroup() %>% 
-    mutate(outcome_measured = as_factor(outcome_measured))
+    mutate(outcome_measured = as_factor(outcome_measured)) %>% 
+    filter(outcome_measured != 's')
+
+knitr::kable(outcome_count)
 
 outcome_count_plot <- ggplot(data = outcome_count) + 
   geom_bar(aes(x = outcome_measured, 
