@@ -12,7 +12,7 @@ library('stringr')
 review_data_wide <- readxl::read_excel('./data/final_data/raw_data/2021-06-10_wide.xlsx', 
                                        na = c('', 'NA')
                                        )
-review_data_compact <- readxl::read_excel('./data/final_data/raw_data/2021-06-10_compact.xlsx', 
+review_data_compact <- readxl::read_excel('./data/final_data/raw_data/2021-06-14_compact.xlsx', 
                                           na = c('', 'NA')
                                           )
 
