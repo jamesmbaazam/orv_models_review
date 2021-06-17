@@ -3,7 +3,8 @@ title: "Systematic review of outbreak response models"
 author: "James Azam"
 date: "01/06/2021"
 output:
-  word_document: default
+  word_document:
+    keep_md: true
 ---
 
 ```{r setup, include=FALSE}
@@ -180,42 +181,105 @@ knitr::kable(disease_studied_most)
 ```{r echo=FALSE, message=FALSE}
 
 #Tally of how many times each country has been studied
-countries_studied_count <- long_data_no_fmd %>% 
+countries_and_continents_studied_by_count <- long_data_no_fmd %>% 
     group_by(paper_title) %>%
     distinct(country_studied) %>% 
     count(country_studied, sort = T) %>% 
     ungroup(paper_title) %>% 
     count(country_studied, sort = T) %>% 
-    mutate(continent = countrycode(country_studied, 
+    mutate(continent_studied = countrycode(country_studied, 
                                           destination = 'continent',
                                           origin = 'iso2c'
                                           ),
-           continent = case_when(is.na(continent) ~ country_studied,
-                                 !is.na(continent) ~ continent
+           continent_studied = case_when(is.na(continent_studied) ~ country_studied,
+                                 !is.na(continent_studied) ~ continent_studied
                                  )
                                  
            ) %>% 
-  mutate(continent = if_else(str_detect(continent, 'asia') == T, 'Asia',
-                               if_else(str_detect(continent, 'africa') == T, 'Africa',
-                                       continent
+  mutate(continent_studied = if_else(str_detect(continent_studied, 'asia') == T, 'Asia',
+                               if_else(str_detect(continent_studied, 'africa') == T, 'Africa',
+                                       continent_studied
                                )
                              )
+         ) %>% 
+  mutate(country_studied = as_factor(country_studied), 
+         continent_studied = as_factor(str_to_lower(continent_studied)),
+         percentage = round(n/sum(n)*100, 1)
          )
 
-knitr::kable(countries_studied_count, col.names = c('Country/Setting', 'Number of times studied', 'Continent'))
-  
-countries_studied_most <- countries_studied_count %>% 
+#Print the results
+knitr::kable(countries_and_continents_studied_by_count, 
+             col.names = c('Country/Setting', 
+                           'Number of times studied', 
+                           'Continent',
+                           'Percent of total studies'
+                           )
+             )
+ 
+#Find the country most studied but first remove the hypothetical countries 
+countries_studied_most <- countries_and_continents_studied_by_count %>% 
     dplyr::filter(country_studied != 'none') %>% 
     filter(n == max(n))
-    
-knitr::kable(countries_studied_most, col.names = c('Most studied country', 'Number of times studied', 'COntinent'))
 
+#Print the result as a table    
+knitr::kable(countries_studied_most, 
+             col.names = c('Most studied country', 
+                           'Number of times studied', 
+                           'Continent',
+                           'Percent of total studies'
+                           )
+             )
 
-continent_studied_most <- countries_studied_count %>% 
-    dplyr::filter(continent != 'none') %>% 
+#Find the continent most studied but first remove the hypothetical countries
+continent_studied_most <- countries_and_continents_studied_by_count %>% 
+    dplyr::filter(continent_studied != 'none') %>% 
     filter(n == max(n))
-    
-knitr::kable(continent_studied_most %>% select(-country_studied), col.names = c('Most studied continent', 'Number of times studied'))
+
+
+#Print the result as a table      
+knitr::kable(continent_studied_most %>% 
+               select(continent_studied, n, percentage, -country_studied), 
+             col.names = c('Most studied continent', 
+                           'Number of times studied',
+                           'Percent of total studies'
+                           )
+             )
+
+
+#Count the 
+continents_studied_by_count <- countries_and_continents_studied_by_count %>% 
+  filter(continent_studied != 'none') %>% 
+  filter(continent_studied != 'global') %>% 
+  filter(continent_studied != 'northern_hemisphere') %>% 
+  group_by(continent_studied) %>% 
+  summarise(n = sum(n)) %>% 
+  ungroup() %>% 
+  mutate(percentage = round(n/sum(n)*100, 1))
+
+
+continent_studied_most_plot <- ggplot(data = continents_studied_by_count) + 
+  geom_bar(aes(x = reorder(continent_studied, n), 
+               y = n
+               ),
+           width = 0.5,
+           stat = 'identity',
+           fill = 'darkslategray4', 
+           color = 'black'
+           ) +
+  scale_y_continuous(breaks = seq(0, 70, 10), 
+                     labels = seq(0, 70, 10)
+                     ) +
+  labs(x = 'Continent', y = 'Number of papers')
+  
+plot(continent_studied_most_plot)
+
+knitr::kable(continents_studied_by_count,
+             col.names = c('Continent',
+                           'Number of papers',
+                           'Percent of papers'
+                           )
+             )
+
 ```
 
 Summary of modes
@@ -286,6 +350,8 @@ plot(collap_types_count_barplot)
 
 ```
 
+Plot of proportions of the total publications by collaboration type (academic only versus others).
+
 ```{r echo=FALSE}
 #' Count the number of each author affiliation type per year (including FMD)
 collap_types_by_year <- compact_data_no_fmd %>% 
@@ -293,8 +359,8 @@ collap_types_by_year <- compact_data_no_fmd %>%
                                          )
                                   ), 
          collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
-                                         'Academic', 
-                                         'Other collabs')
+                                         'Academic only', 
+                                         'Other collaborations')
                                  )
          ) %>% 
   count(year_aggreg, 
@@ -305,15 +371,11 @@ collap_types_by_year <- compact_data_no_fmd %>%
 knitr::kable(collap_types_by_year)
 
 
-```
-
-A bar chart with each bar representing a proportion of the total publications for that year.
-
-```{r echo=FALSE}
+#The plot
 # Modify the x-axis labels to account for the lumping of the years from 2005 and below
 x_axis_labels <- as.character(seq(2005, 2020, 2))
 
-x_axis_labels[1] <- '<2005'
+x_axis_labels[1] <- '1970-2005'
 
 
 
@@ -330,12 +392,6 @@ collab_type_by_year_plot <- ggplot(data = collap_types_by_year) +
   scale_x_continuous(breaks = seq(2005, 2020, 2),
                      labels = x_axis_labels
                      ) +
-  # geom_text(aes(x = year_aggreg, 
-  #               y = total_publications, 
-  #               label = total_publications
-  #               ),
-  #           position = position_fill(vjust = 0.6)
-  #           ) +
   labs(title = 'Proportion of publications by collaboration type',
        x = 'Year',
        y = 'Proportion of publications',
@@ -345,6 +401,51 @@ collab_type_by_year_plot <- ggplot(data = collap_types_by_year) +
 
 plot(collab_type_by_year_plot)
 
+```
+
+Plot of academic collaborations versus other collaborations not involving academics.
+
+```{r echo=FALSE}
+
+academic_collabs_versus_others <- compact_data_no_fmd %>% 
+  filter(author_affiliation_type != 'academic_institutions') %>% 
+  mutate(year_aggreg = as.numeric(ifelse(publication_year < 2006, 2005, publication_year
+                                         )
+                                  ), 
+         collab_type = as_factor(if_else(str_detect(author_affiliation_type, 'academic_institutions'), 
+                                         'Academic collaboration', 
+                                         'Other collaborations'
+                                         )
+                                 )
+         ) %>% 
+  count(year_aggreg, 
+        collab_type, 
+        name = 'total_publications'
+        )
+
+
+#plot the result
+academic_collabs_trend <- ggplot(data = academic_collabs_versus_others) + 
+  geom_bar(aes(x = year_aggreg,
+               y = total_publications,
+               fill = collab_type
+               ),
+           color = 'black',
+           stat = 'identity',
+           position = position_fill()  
+             ) +
+  scale_fill_manual(values = c('tan1', 'turquoise1')) +
+  scale_x_continuous(breaks = seq(2005, 2020, 2),
+                     labels = x_axis_labels
+                     ) +
+  labs(title = 'Academic collaborations versus other collaborations not involving academics',
+       x = 'Year',
+       y = 'Proportion of publications',
+       fill = 'Collaboration type' 
+         ) +
+  theme_minimal(base_size = 12)
+
+plot(academic_collabs_trend)
 ```
 
 2. Is vaccination the most effective when compared to other single interventions?
