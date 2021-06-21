@@ -5,6 +5,7 @@ library('scales')
 library('janitor')
 library('forcats')
 library('stringr')
+library('bib2df')
 
 
 
@@ -16,10 +17,18 @@ review_data_compact <- readxl::read_excel('./data/final_data/raw_data/2021-06-14
                                           na = c('', 'NA')
                                           )
 
+citation_data <- bib2df::bib2df(normalizePath('./data/final_data/raw_data/included_studies.bib'), 
+               separate_names = FALSE
+               ) %>% 
+    mutate(year = as.numeric(YEAR))
 
 ############################################
 #Data cleaning
 ############################################
+
+
+
+
 #Step 1
 #' Remove extraneous variables and clean the column names
 #' the compact data is the same as above except that there are multiple entries per cell;
@@ -33,7 +42,8 @@ review_data_compact_cleaning_step1 <- review_data_compact %>%
 #' Step 2
 #' Rename/shorten the entries and "merge" the entries in "other" and "multiple" columns into the "main" column
 review_data_compact_cleaning_step2 <- review_data_compact_cleaning_step1 %>% 
-    mutate(disease = str_to_lower(disease), 
+    mutate(title = str_to_lower(paper_title), 
+           disease = str_to_lower(disease), 
            objectives = case_when(objectives == 'assess_impact_future' ~ 'future', 
                                   objectives == 'assess_impact_past' ~ 'past', 
                                   objectives == 'assess_impact_past assess_impact_future' ~ 'both'
@@ -107,7 +117,7 @@ review_data_compact_cleaning_step3 <- review_data_compact_cleaning_step2 %>%
 #Removed the "other" and "multiple" columns
 review_data_compact_cleaned <- review_data_compact_cleaning_step3 %>% 
     select(-contains('othe'), #for some reason, one column has "othe" instead of "other"
-           -country_studied_multiple
+           -c(paper_title, country_studied_multiple),
     ) 
 #View(review_data_compact_cleaned)
 
@@ -133,6 +143,42 @@ review_data_wide_to_long <- review_data_compact_cleaned %>%
 
 #save the cleaned data
 saveRDS(review_data_wide_to_long, file = './data/final_data/cleaned_data/review_data_long_cleaned.rds')
+
+#For the citation file, 
+citation_data_cleaned <- citation_data %>% 
+    remove_empty(which = c('rows', 'cols')) %>% 
+    clean_names() %>% 
+    select(-c('address',
+              'abstract',
+              'annote',
+              'booktitle',
+              'type',
+              'isbn',
+              'issn',
+              'file',
+              'keywords',
+              'mendeley_tags',
+              'pmid',
+              'url',
+              'archiveprefix',
+              'arxivid',
+              'eprint',
+              'year_2'
+    )
+    ) %>% 
+    mutate(category = str_to_lower(category), 
+           title = str_to_lower(title),
+           year = as.numeric(year)
+    )
+
+compact_data_with_citation_keys <- left_join(review_data_compact_cleaned, citation_data_cleaned, by = c('title'))
+
+
+
+#save the cleaned data
+saveRDS(citation_data_cleaned, file = './data/final_data/cleaned_data/compact_data_with_citation_keys_cleaned.rds')
+
+
 
 rm(list = ls())
 
