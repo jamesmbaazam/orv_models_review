@@ -4,7 +4,9 @@ author: "James Azam"
 date: "01/06/2021"
 output:
   word_document:
-    keep_md: true
+    keep_md: yes
+  html_document:
+    df_print: paged
 ---
 
 
@@ -74,92 +76,64 @@ What science is being inferred from models?
 |influenza | 135|
 
 
-```
-## Warning in countrycode(country_studied, destination = "continent", origin = "iso2c"): Some values were not matched unambiguously: GLOBAL, NONE, NORTHERN_HEMISPHERE, SOUTHEAST_ASIA, WEST_AFRICA, WHO_SOUTHEAST_ASIA_REGION
-```
+Table: Number/percentage of studies per country
+
+|Country     | Number of studies| Percentage|
+|:-----------|-----------------:|----------:|
+|other       |                91|       36.4|
+|none        |                54|       21.7|
+|US          |                37|       14.9|
+|CN          |                19|        7.6|
+|CA          |                11|        4.4|
+|LR          |                10|        4.0|
+|HK          |                 9|        3.6|
+|MX          |                 9|        3.6|
+|west_africa |                 9|        3.6|
 
 
 
-|Country/Setting           | Number of times studied|Continent           | Percent of total studies|
-|:-------------------------|-----------------------:|:-------------------|------------------------:|
-|none                      |                      54|none                |                     21.7|
-|US                        |                      37|americas            |                     14.9|
-|CN                        |                      19|asia                |                      7.6|
-|CA                        |                      11|americas            |                      4.4|
-|LR                        |                      10|africa              |                      4.0|
-|HK                        |                       9|asia                |                      3.6|
-|MX                        |                       9|americas            |                      3.6|
-|west_africa               |                       9|africa              |                      3.6|
-|global                    |                       7|global              |                      2.8|
-|GB                        |                       5|europe              |                      2.0|
-|SL                        |                       5|africa              |                      2.0|
-|BR                        |                       4|americas            |                      1.6|
-|GN                        |                       4|africa              |                      1.6|
-|HT                        |                       4|americas            |                      1.6|
-|JP                        |                       4|asia                |                      1.6|
-|NL                        |                       4|europe              |                      1.6|
-|NO                        |                       4|europe              |                      1.6|
-|IL                        |                       3|asia                |                      1.2|
-|NG                        |                       3|africa              |                      1.2|
-|TW                        |                       3|asia                |                      1.2|
-|DK                        |                       2|europe              |                      0.8|
-|IN                        |                       2|asia                |                      0.8|
-|IT                        |                       2|europe              |                      0.8|
-|LY                        |                       2|africa              |                      0.8|
-|NE                        |                       2|africa              |                      0.8|
-|SG                        |                       2|asia                |                      0.8|
-|ZW                        |                       2|africa              |                      0.8|
-|AO                        |                       1|africa              |                      0.4|
-|AU                        |                       1|oceania             |                      0.4|
-|BE                        |                       1|europe              |                      0.4|
-|BF                        |                       1|africa              |                      0.4|
-|CD                        |                       1|africa              |                      0.4|
-|CG                        |                       1|africa              |                      0.4|
-|CO                        |                       1|americas            |                      0.4|
-|CV                        |                       1|africa              |                      0.4|
-|ET                        |                       1|africa              |                      0.4|
-|FO                        |                       1|europe              |                      0.4|
-|FR                        |                       1|europe              |                      0.4|
-|GR                        |                       1|europe              |                      0.4|
-|HU                        |                       1|europe              |                      0.4|
-|IS                        |                       1|europe              |                      0.4|
-|northern_hemisphere       |                       1|northern_hemisphere |                      0.4|
-|NP                        |                       1|asia                |                      0.4|
-|PH                        |                       1|asia                |                      0.4|
-|PT                        |                       1|europe              |                      0.4|
-|SD                        |                       1|africa              |                      0.4|
-|SE                        |                       1|europe              |                      0.4|
-|southeast_asia            |                       1|asia                |                      0.4|
-|TD                        |                       1|africa              |                      0.4|
-|TZ                        |                       1|africa              |                      0.4|
-|VE                        |                       1|americas            |                      0.4|
-|who_southeast_asia_region |                       1|asia                |                      0.4|
-|YE                        |                       1|asia                |                      0.4|
-|ZM                        |                       1|africa              |                      0.4|
+Table: Number/percentage of studies per continent
+
+|Continent           | Number of studies| Percentage|
+|:-------------------|-----------------:|----------:|
+|americas            |                67|       26.9|
+|none                |                54|       21.7|
+|africa              |                47|       18.8|
+|asia                |                47|       18.8|
+|europe              |                25|       10.0|
+|global              |                 7|        2.8|
+|northern_hemisphere |                 1|        0.4|
+|oceania             |                 1|        0.4|
 
 
 
-|Most studied country | Number of times studied|Continent | Percent of total studies|
-|:--------------------|-----------------------:|:---------|------------------------:|
-|US                   |                      37|americas  |                     14.9|
+Table: Most studied country
+
+|Country | Number of studies| Percentage|
+|:-------|-----------------:|----------:|
+|US      |                37|       14.9|
 
 
 
-|Most studied continent | Number of times studied| Percent of total studies|
-|:----------------------|-----------------------:|------------------------:|
-|americas               |                      37|                     14.9|
+Table: Most studied continent
+
+|Continent | Number of studies| Percentage|
+|:---------|-----------------:|----------:|
+|americas  |                67|       26.9|
 
 ![](orv_sys_rev_data_analysis_files/figure-docx/unnamed-chunk-6-1.png)<!-- -->
 
+Table: Number/percent of studies by continent
+
 |Continent | Number of papers| Percent of papers|
 |:---------|----------------:|-----------------:|
+|africa    |               47|              25.1|
 |americas  |               67|              35.8|
 |asia      |               47|              25.1|
-|africa    |               47|              25.1|
 |europe    |               25|              13.4|
 |oceania   |                1|               0.5|
 
-Summary of modes
+Other summaries
 
 |max_pub_year |disease_with_max_pubs |country_most_studied |
 |:------------|:---------------------|:--------------------|
@@ -189,41 +163,19 @@ Note that we do not include FMD in all the primary analyses. We only use it for 
 
 ![](orv_sys_rev_data_analysis_files/figure-docx/unnamed-chunk-9-1.png)<!-- -->
 
-Plot of proportions of the total publications by collaboration type (academic only versus others).
+Table: Number of publications per collaboration type
 
+|Collaboration type                                    | Number of publications|
+|:-----------------------------------------------------|----------------------:|
+|academic_institutions                                 |                    131|
+|academic_institutions + government_institutions       |                     54|
+|academic_institutions + government_institutions + NGO |                     14|
+|academic_institutions + NGO                           |                     18|
+|government_institutions                               |                      5|
+|government_institutions + NGO                         |                      2|
+|NGO                                                   |                      5|
 
-| year_aggreg|collab_type          | total_publications|
-|-----------:|:--------------------|------------------:|
-|        2005|Academic only        |                  4|
-|        2005|Other collaborations |                  5|
-|        2006|Academic only        |                  3|
-|        2006|Other collaborations |                  2|
-|        2007|Academic only        |                  4|
-|        2007|Other collaborations |                  4|
-|        2008|Academic only        |                  1|
-|        2008|Other collaborations |                  8|
-|        2009|Academic only        |                  7|
-|        2009|Other collaborations |                  8|
-|        2010|Academic only        |                  4|
-|        2010|Other collaborations |                  7|
-|        2011|Academic only        |                 16|
-|        2011|Other collaborations |                  7|
-|        2012|Academic only        |                  7|
-|        2012|Other collaborations |                  4|
-|        2013|Academic only        |                  9|
-|        2013|Other collaborations |                  3|
-|        2014|Academic only        |                 10|
-|        2014|Other collaborations |                  6|
-|        2015|Academic only        |                 14|
-|        2015|Other collaborations |                 11|
-|        2016|Academic only        |                 18|
-|        2016|Other collaborations |                 10|
-|        2017|Academic only        |                 10|
-|        2017|Other collaborations |                  8|
-|        2018|Academic only        |                  9|
-|        2018|Other collaborations |                  9|
-|        2019|Academic only        |                 15|
-|        2019|Other collaborations |                  6|
+Proportions of the total publications by collaboration type (academic only versus others).
 
 ![](orv_sys_rev_data_analysis_files/figure-docx/unnamed-chunk-10-1.png)<!-- -->
 
