@@ -123,40 +123,78 @@ plot(pubs_per_year_bar_plot)
 ```
 
 ```{r echo=FALSE}
-modelling_objectives_by_outbreak_type_df <- long_data_no_fmd %>% 
-  select(title, objectives, outbreak_type) 
+#Find the uniques entries
+modelling_objectives_unique_entries <- long_data_no_fmd %>% 
+  select(title, objectives) %>% 
+  distinct() 
 
-modelling_objectives_by_outbreak_type <- modelling_objectives_by_outbreak_type_df %>%
+#count the number of studies per objective type
+modelling_objectives_count <- modelling_objectives_unique_entries %>% 
+  count(objectives, name = 'num_of_studies')
+
+#Print a table of the results
+knitr::kable(modelling_objectives_count,
+             col.names = c('Objective type',
+                           'Number of studies'
+                           ),
+             caption = 'Number of studies per objective type'
+             )
+
+#Find the unique entries 
+outbreak_types_unique_entries <- long_data_no_fmd %>% 
+  select(title, outbreak_type) %>% 
+  distinct() 
+
+#Count the number of studies per outbreak type  
+outbreak_types_count <- outbreak_types_unique_entries %>% 
+  count(outbreak_type, name = 'num_of_studies')
+  
+
+#Print a table of the results
+knitr::kable(outbreak_types_count,
+             col.names = c('Outbreak type',
+                           'Number of studies'
+                           ),
+             caption = 'Number of studies per outbreak type'
+             )
+
+
+#Find the number of unique entries per objective type and outbreak type combination  
+modelling_objectives_by_outbreak_type_unique_entries <- long_data_no_fmd %>% 
+  select(title, objectives, outbreak_type) %>% 
   group_by(title) %>% 
-  distinct(objectives, outbreak_type) %>% 
-  ungroup() %>% 
-  group_by(objectives) %>% 
-  count(objectives, outbreak_type)
+  distinct() %>% 
+  ungroup() 
 
-knitr::kable(modelling_objectives_by_outbreak_type, 
+modelling_objectives_by_outbreak_type_count <- modelling_objectives_by_outbreak_type_unique_entries %>% 
+  count(objectives, outbreak_type, name = 'num_of_studies') %>% 
+  arrange(desc(num_of_studies))
+
+knitr::kable(modelling_objectives_by_outbreak_type_count, 
              col.names = c('Objective type', 
                            'Outbreak type', 
                            'Number of studies'
-                           )
+                           ),
+             caption = 'Number of studies per objective and outbreak type'
              ) 
 
-modelling_objectives_n_timing_plot <- ggplot(data = modelling_objectives_by_outbreak_type) + 
-  geom_bar(aes(y = n,
-               x = objectives,
-               fill = outbreak_type
-               ),
-           stat = 'identity', 
-           position = position_dodge(),
-           width = 0.6
-           ) +
-  labs(y = 'Number of papers') +
-  scale_x_discrete(labels = c('both' = 'Prospective + Retrospective', 
-                              'future' = 'Prospective', 
-                              'past' = 'Retrospective')
-                   ) +
-  theme_minimal()
-
-plot(modelling_objectives_n_timing_plot)
+# modelling_objectives_n_timing_plot <- ggplot(data = modelling_objectives_by_outbreak_type_count) +
+#   geom_bar(aes(y = n,
+#                x = objectives,
+#                fill = outbreak_type
+#                ),
+#            stat = 'identity',
+#            position = position_dodge(),
+#            width = 0.6
+#            ) +
+#   labs(y = 'Number of papers') +
+#   scale_x_discrete(labels = c('both' = 'Prospective + Retrospective',
+#                               'future' = 'Prospective',
+#                               'past' = 'Retrospective')
+#                    ) +
+#   theme_minimal()
+# 
+# plot(modelling_objectives_n_timing_plot)
 ```
 
 
