@@ -34,16 +34,35 @@ What science is being inferred from models?
 ![](orv_sys_rev_data_analysis_files/figure-docx/unnamed-chunk-4-1.png)<!-- -->
 
 
+Table: Number of studies per objective type
+
+|Objective type | Number of studies|
+|:--------------|-----------------:|
+|both           |                 6|
+|future         |               166|
+|past           |                57|
+
+
+
+Table: Number of studies per outbreak type
+
+|Outbreak type         | Number of studies|
+|:---------------------|-----------------:|
+|hypothetical_outbreak |               115|
+|real_outbreak         |               114|
+
+
+
+Table: Number of studies per objective and outbreak type
+
 |Objective type |Outbreak type         | Number of studies|
 |:--------------|:---------------------|-----------------:|
-|both           |hypothetical_outbreak |                 2|
-|both           |real_outbreak         |                 4|
 |future         |hypothetical_outbreak |               107|
 |future         |real_outbreak         |                59|
-|past           |hypothetical_outbreak |                 6|
 |past           |real_outbreak         |                51|
-
-![](orv_sys_rev_data_analysis_files/figure-docx/unnamed-chunk-5-1.png)<!-- -->
+|past           |hypothetical_outbreak |                 6|
+|both           |real_outbreak         |                 4|
+|both           |hypothetical_outbreak |                 2|
 
 
 
