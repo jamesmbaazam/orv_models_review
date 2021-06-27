@@ -602,15 +602,10 @@ How many times each disease has been studied.
 ```{r echo=FALSE}
 #count the number of unique diseases studied
 disease_studied <- long_data_no_fmd %>% 
-    group_by(title) %>% 
-    distinct(disease) %>% 
-    count(disease) %>% 
-    ungroup() %>% 
     group_by(disease) %>% 
-    count(disease) %>% 
-    arrange(desc(n)) %>% 
-    ungroup() %>% 
-    mutate(disease = as_factor(disease))
+    distinct(title) %>% 
+    count(disease, sort = TRUE, name = 'num_of_studies') %>% 
+  mutate(disease = as_factor(disease))
 
 
 diseases_plot <- ggplot(data = disease_studied) + 
