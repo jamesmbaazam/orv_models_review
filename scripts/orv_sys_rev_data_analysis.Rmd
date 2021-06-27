@@ -705,3 +705,81 @@ plot(outcome_count_plot)
 
 ```
 
+
+Model structure
+
+```{r echo=FALSE}
+#Keep only the unique entries 
+model_structure_unique_entries <- long_data_no_fmd %>% 
+  group_by(title) %>% 
+  distinct(model_structure) %>% 
+  ungroup()
+
+#Count the number of studies
+model_structure_unique_count <- model_structure_unique_entries %>%
+    group_by(model_structure) %>% 
+    count(model_structure, name = 'num_of_studies') 
+
+#Print the table
+knitr::kable(model_structure_unique_count)
+
+```
+
+Model parametrization & validation
+
+```{r}
+#Keep only the unique entries
+parametrization_and_validation_count <- compact_data_no_fmd %>% 
+  mutate(parametrization = str_replace(parametrization, ' ', ' + '), 
+         validation = str_replace(validation, ' ', ' + ')
+         ) %>% 
+  count(parametrization, 
+        validation, 
+        name = 'num_of_studies'
+        ) %>% 
+  group_by(parametrization) %>% 
+  arrange(desc(num_of_studies), .by_group = T)   
+
+#Print the table
+knitr::kable(parametrization_and_validation_count)
+
+```
+
+Sensitivity analyses
+
+```{r}
+#Keep only the unique entries
+sensitivity_analysis_unique_entries <- long_data_no_fmd %>% 
+  group_by(title) %>% 
+  distinct(sensitivity_analysis) %>% 
+  ungroup()
+
+#Count the number of studies
+sensitivity_analysis_count <- sensitivity_analysis_unique_entries %>% 
+  count(sensitivity_analysis, name = 'num_of_studies') 
+
+#Print the table
+knitr::kable(sensitivity_analysis_count)
+
+```
+
+Code and data availability
+```{r}
+#Keep only the unique entries
+code_and_data_availability_unique_entries <- long_data_no_fmd %>% 
+  group_by(title) %>% 
+  distinct(data_used, data_available) %>% 
+  ungroup() %>% 
+  filter(data_used != 'no') 
+
+#Count the number of studies
+code_and_data_availability_count <- code_and_data_availability_unique_entries %>% 
+  count(data_used, data_available, name = 'num_of_studies')
+
+#Print the results
+knitr::kable(code_and_data_availability_count)
+
+
+
+```
+
