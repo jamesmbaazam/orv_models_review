@@ -547,14 +547,23 @@ plot(academic_collabs_trend)
 #count the impact categories
 vax_impact_categories <- compact_data_no_fmd %>% 
   filter(vax_modelled_with_non_vax == 'yes') %>% 
-  count(is_vax_effective, sort = T) 
+  count(is_vax_effective, 
+        name = 'num_of_studies', 
+        sort = T
+        ) 
 
-knitr::kable(vax_impact_categories)
+#Print the results
+knitr::kable(vax_impact_categories, 
+             col.names = c('Vaccination is most impactful', 
+                           'Number of studies'
+                           ),
+             caption = 'Studies\' conclusions about impact of vaccination'
+             )
 
 ```
 
 
-```{r echo=FALSE}
+```{r echo=FALSE, eval=FALSE}
 vax_impact_plot <- ggplot(data = vax_impact_categories) + 
   geom_bar(
     aes(x = is_vax_effective, 
@@ -632,21 +641,22 @@ How many times each intervention type has been modelled.
 
 ```{r echo=FALSE}
 #count the number of unique interventions modelled
-intervention_count <- long_data_no_fmd %>% 
-    group_by(title) %>% 
-    distinct(intervention_modelled) %>% 
-    count(intervention_modelled) %>% 
-    ungroup() %>% 
-    group_by(intervention_modelled) %>% 
-    count(intervention_modelled) %>% 
-    arrange(desc(n)) %>% 
-    ungroup() %>% 
-    mutate(intervention_modelled = as_factor(intervention_modelled)) %>% 
-    filter(intervention_modelled != 'e.g.' | intervention_modelled != 'various')
+interventions_unique_entries <- long_data_no_fmd %>% 
+  group_by(title) %>% 
+  distinct(intervention_modelled) %>% 
+  ungroup()
 
-intervention_count_plot <- ggplot(data = intervention_count) + 
+interventions_count <- interventions_unique_entries %>% 
+  group_by(intervention_modelled) %>% 
+  count(intervention_modelled, name = 'num_of_studies', sort = T) %>% 
+  ungroup() %>% 
+  filter(intervention_modelled != 'e.g.') %>% 
+  filter(intervention_modelled != 'various')
+    
+
+interventions_count_plot <- ggplot(data = interventions_count) + 
   geom_bar(aes(x = intervention_modelled, 
-               y = n), 
+               y = num_of_studies), 
            stat = 'identity',
            fill = 'darkslategray2',
            color = 'black'
@@ -654,9 +664,9 @@ intervention_count_plot <- ggplot(data = intervention_count) +
   coord_flip() +
   theme_minimal()
 
-plot(intervention_count_plot)
+plot(interventions_count_plot)
 
-knitr::kable(intervention_count)
+knitr::kable(interventions_count)
 
 ```
 
@@ -664,26 +674,28 @@ How many times each outcome/metric has been used
 
 ```{r echo=FALSE}
 #count the number of unique outcomes measured
-outcome_count <- long_data_no_fmd %>% 
-    group_by(title) %>% 
-    distinct(outcome_measured) %>% 
-    count(outcome_measured) %>% 
-    ungroup() %>% 
-    group_by(outcome_measured) %>% 
-    count(outcome_measured) %>% 
-    arrange(desc(n)) %>% 
-    ungroup() %>% 
-    mutate(outcome_measured = as_factor(outcome_measured)) %>% 
-    filter(outcome_measured != 's')
+outcomes_unique_entries <- long_data_no_fmd %>% 
+  group_by(title) %>% 
+  distinct(outcome_measured) %>% 
+  ungroup()
+  
+#Count the number of studies 
+outcomes_count <- outcomes_unique_entries %>% 
+  group_by(outcome_measured) %>% 
+  count(outcome_measured, name = 'num_of_studies', sort = T) %>% 
+  ungroup() %>% 
+  filter(outcome_measured != 's') 
 
-knitr::kable(outcome_count)
+knitr::kable(outcomes_count)
 
-outcome_count_plot <- ggplot(data = outcome_count) + 
-  geom_bar(aes(x = outcome_measured, 
-               y = n), 
+#Plot the result
+outcome_count_plot <- ggplot(data = outcomes_count) + 
+  geom_point(aes(x = reorder(outcome_measured, 
+                             num_of_studies), 
+               y = num_of_studies
+               ), 
            stat = 'identity',
-           fill = 'darkslategray4',
-           color = 'black'
+           color = 'darkslategray4'
            ) +
   coord_flip() +
   theme_minimal()
