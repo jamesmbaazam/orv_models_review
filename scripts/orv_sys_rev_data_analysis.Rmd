@@ -24,6 +24,12 @@ library('forcats')
 library('stringr')
 library('countrycode')
 library('bib2df')
+library('conflicted')
+
+#resolve package function conflicts
+conflict_prefer('filter', 'dplyr')
+conflict_prefer('select', 'dplyr')
+conflict_prefer('kable', 'knitr')
 ```
 
 
