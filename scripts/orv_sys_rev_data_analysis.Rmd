@@ -231,11 +231,10 @@ knitr::kable(disease_studied_most)
 
 #Tally of how many times and percentage of times each COUNTRY has been studied
 countries_studied_by_count <- long_data_no_fmd %>% 
-    group_by(title) %>%
-    distinct(country_studied) %>% 
-    count(country_studied, sort = T) %>% 
-    ungroup(title) %>% 
-    count(country_studied, sort = T, name = 'num_of_studies') %>% 
+    group_by(country_studied) %>%
+    distinct(title) %>% 
+    count(country_studied, name = 'num_of_studies', sort = T) %>% 
+    ungroup(country_studied) %>% 
     mutate(country_studied = as_factor(country_studied), 
            percentage = round(num_of_studies/sum(num_of_studies)*100, 1)
            )
@@ -355,10 +354,10 @@ continent_studied_most_plot <- ggplot(data = continents_studied_by_count) +
   
 plot(continent_studied_most_plot)
 
-knitr::kable(continents_studied_by_count,
+knitr::kable(continents_studied_by_count %>% arrange(percentage),
              col.names = c('Continent',
                            'Number of papers',
-                           'Percent of papers'
+                           'Percentage'
                            ),
              caption = 'Number/percent of studies by continent'
              )
