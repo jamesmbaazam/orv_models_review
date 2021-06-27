@@ -118,8 +118,8 @@ pubs_per_year_bar_plot <- ggplot(data = pubs_per_year) +
            stat = 'identity', 
            color = 'black',
            fill = 'tomato3') +
-  scale_y_continuous(breaks = seq(0, 26, 2),
-                     labels = seq(0, 26, 2)
+  scale_y_continuous(breaks = seq(0, 30, 2),
+                     labels = seq(0, 30, 2)
                      ) +
   labs(x = 'Year of publication', y = 'Number of papers') +
   theme_minimal()
