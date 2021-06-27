@@ -99,7 +99,7 @@ vax_impact_data <- compact_data_no_fmd %>%
 3. Countries/settings being studied (author affiliation vs country studied)
 
 
-What science is being inferred from models?
+# What science is being inferred from models?
 
 1. Impact of vaccination (human diseases vs FMD); analyse with and without Influenza
 2. What diseases are being studied (to understand vaccine impact)
@@ -127,6 +127,8 @@ pubs_per_year_bar_plot <- ggplot(data = pubs_per_year) +
 plot(pubs_per_year_bar_plot)
 
 ```
+
+# Modelling objectives
 
 ```{r echo=FALSE}
 #Find the uniques entries
@@ -227,7 +229,11 @@ disease_studied_most <- disease_studied_count %>%
 knitr::kable(disease_studied_most)
 ```
 
+# Number of studies per country and continent
+
+
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
+#FIXME: I have to cross tabulate the countries studied with number of studies with at least one author located in the country being studied.
 
 #Tally of how many times and percentage of times each COUNTRY has been studied
 countries_studied_by_count <- long_data_no_fmd %>% 
@@ -364,7 +370,8 @@ knitr::kable(continents_studied_by_count %>% arrange(percentage),
 
 ```
 
-Other summaries
+# Highest number of studies per year and disease
+
 ```{r echo=FALSE}
 knitr::kable(tibble(max_pub_year = max_pub_year$publication_year, 
                     disease_with_max_pubs = disease_studied_most$disease,
@@ -377,8 +384,8 @@ knitr::kable(tibble(max_pub_year = max_pub_year$publication_year,
 
 # Primary objectives 
 
-1. Is modelling being used to inform outbreak response policy-making? 
-+ How are the results distributed according to collaboration type?
+## 1. Is modelling being used to inform outbreak response policy-making? 
+### How are the results distributed according to collaboration type?
 
 Note that we do not include FMD in all the primary analyses. We only use it for comparisons, where necessary.
 
@@ -406,7 +413,7 @@ collab_types_count <- collab_type_data %>%
 knitr::kable(collab_types_count)
 ```
 
-+ What has been the trend in collaboration over the years?
+### What has been the trend in collaboration over the years?
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
     
@@ -436,7 +443,7 @@ knitr::kable(collab_types_count,
 
 ```
 
-Proportions of the total publications by collaboration type (academic only versus others).
+### Proportions of the total publications by collaboration type (academic only versus others).
 
 ```{r echo=FALSE}
 #' Count the number of each author affiliation type per year (including FMD)
@@ -489,7 +496,7 @@ plot(collab_type_by_year_plot)
 
 ```
 
-Plot of academic collaborations versus other collaborations not involving academics.
+### Academic collaborations versus other collaborations not involving academics.
 
 ```{r echo=FALSE}
 
@@ -538,7 +545,7 @@ plot(academic_collabs_trend)
 
 ```
 
-2. Is vaccination the most effective when compared to other single interventions?
+# Is vaccination the most effective when compared to other single interventions?
 
 
 ```{r echo=FALSE}
@@ -604,20 +611,20 @@ plot(vax_impact_plot)
 
 ```
 
-How many times each disease has been studied.
+# How many times each disease has been studied.
 
 ```{r echo=FALSE}
 #count the number of unique diseases studied
 disease_studied <- long_data_no_fmd %>% 
-    group_by(disease) %>% 
-    distinct(title) %>% 
-    count(disease, sort = TRUE, name = 'num_of_studies') %>% 
+  group_by(disease) %>% 
+  distinct(title) %>% 
+  count(disease, sort = TRUE, name = 'num_of_studies') %>% 
   mutate(disease = as_factor(disease))
 
 
 diseases_plot <- ggplot(data = disease_studied) + 
-    geom_bar(aes(x = disease, 
-                 y = n
+    geom_bar(aes(x = reorder(disease, num_of_studies), 
+                 y = num_of_studies
                  ), 
              stat = 'identity',
              fill = 'dodgerblue3',
@@ -635,7 +642,7 @@ plot(diseases_plot)
 ```
 
 
-How many times each intervention type has been modelled.
+# How many times each intervention type has been modelled.
 
 ```{r echo=FALSE}
 #count the number of unique interventions modelled
@@ -668,7 +675,7 @@ knitr::kable(interventions_count)
 
 ```
 
-How many times each outcome/metric has been used
+# How many times each outcome/metric has been used
 
 ```{r echo=FALSE}
 #count the number of unique outcomes measured
@@ -704,7 +711,7 @@ plot(outcome_count_plot)
 ```
 
 
-Model structure
+# Number of studies per model structure type
 
 ```{r echo=FALSE}
 #Keep only the unique entries 
@@ -720,12 +727,34 @@ model_structure_unique_count <- model_structure_unique_entries %>%
 
 #Print the table
 knitr::kable(model_structure_unique_count)
+```
+
+
+# Cross-tabulation of the model structure by parametrization and validation types
+
+```{r echo=FALSE}
+#Cross tally the model structure with parametrization and validation categories
+#FIXME: Check that studies are either not being under counted or double-counted. What do I want to count here? Is it the unique studies per method or combined method because most studies used a combination of parametrization methods especially
+parametrization_and_validation_by_model_structure <- long_data_no_fmd %>%
+  group_by(parametrization) %>% 
+  distinct(title, model_structure, parametrization, validation) %>% 
+  tabyl(var1 = model_structure, 
+        var2 = validation,
+        var3 = parametrization
+        ) %>% 
+  bind_rows(.id = 'parametrization_method') %>% 
+  relocate('parametrization_method', .after = 'model_structure')
+  
+
+#Print the table of results
+knitr::kable(parametrization_and_validation_by_model_structure,
+             caption = 'Parametrization and validation types per model structure')
 
 ```
 
-Model parametrization & validation
+# Model parametrization & validation
 
-```{r}
+```{r echo=FALSE}
 #Keep only the unique entries
 parametrization_and_validation_count <- compact_data_no_fmd %>% 
   mutate(parametrization = str_replace(parametrization, ' ', ' + '), 
@@ -743,9 +772,9 @@ knitr::kable(parametrization_and_validation_count)
 
 ```
 
-Sensitivity analyses
+# Sensitivity analyses
 
-```{r}
+```{r echo=FALSE}
 #Keep only the unique entries
 sensitivity_analysis_unique_entries <- long_data_no_fmd %>% 
   group_by(title) %>% 
@@ -761,8 +790,9 @@ knitr::kable(sensitivity_analysis_count)
 
 ```
 
-Code and data availability
-```{r}
+# Code and data availability
+
+```{r echo=FALSE}
 #Keep only the unique entries
 code_and_data_availability_unique_entries <- long_data_no_fmd %>% 
   group_by(title) %>% 
