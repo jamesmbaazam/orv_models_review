@@ -213,17 +213,16 @@ max_pub_year <- compact_data_no_fmd %>%
 
 #Tally of how many times each disease was studied during the period
 disease_studied_count <- long_data_no_fmd %>% 
-  group_by(title) %>% 
-  distinct(disease) %>% 
-  count(disease, sort = T) %>%
-  ungroup() %>%
-  count(disease, sort = T) 
+  group_by(disease) %>% 
+  distinct(title) %>% 
+  count(disease, name = 'num_of_studies', sort = T) %>%
+  ungroup() 
 
 knitr::kable(disease_studied_count, col.names = c('Disease', 'Number of times'))
 
 # Disease most studied
 disease_studied_most <- disease_studied_count %>% 
-  filter(n == max(n)) 
+  filter(num_of_studies == max(num_of_studies)) 
 
 knitr::kable(disease_studied_most)
 ```
