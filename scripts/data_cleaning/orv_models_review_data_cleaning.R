@@ -10,16 +10,18 @@ library('bib2df')
 
 
 #load the data and remove extraneous variables 
-review_data_wide <- readxl::read_excel('./data/final_data/raw_data/2021-06-10_wide.xlsx', 
-                                       na = c('', 'NA')
-                                       )
-review_data_compact <- readxl::read_excel('./data/final_data/raw_data/2021-06-14_compact.xlsx', 
+review_data_wide <- read_delim('./data/final_data/raw_data/2021_07_28_wide.csv', 
+                               delim = ';', 
+                               na = c('', 'NA')
+                               )
+review_data_compact <- read_delim('./data/final_data/raw_data/2021_07_28_compact.csv', 
+                                          delim = ';', 
                                           na = c('', 'NA')
                                           )
 
-citation_data <- bib2df::bib2df(normalizePath('./data/final_data/raw_data/included_studies.bib'), 
-               separate_names = FALSE
-               ) %>% 
+citation_data <- bib2df('./data/final_data/raw_data/included_studies.bib', 
+                        separate_names = FALSE
+                        ) %>% 
     mutate(year = as.numeric(YEAR))
 
 ############################################
