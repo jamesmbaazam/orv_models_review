@@ -178,9 +178,15 @@ compact_data_with_citation_keys <- left_join(review_data_compact_cleaned, citati
 
 
 #save the cleaned data
-saveRDS(citation_data_cleaned, file = './data/final_data/cleaned_data/compact_data_with_citation_keys_cleaned.rds')
+saveRDS(compact_data_with_citation_keys, file = './data/final_data/cleaned_data/compact_data_with_citation_keys_cleaned.rds')
 
 
 
 rm(list = ls())
+
+# list2env(citation_data_cleaned = citation_data_cleaned, 
+#          review_data_cleaned_long = review_data_wide_to_long, 
+#          review_data_cleaned_compact = review_data_compact_cleaned,
+#          envir = .GlobalEnv
+#          )
 
