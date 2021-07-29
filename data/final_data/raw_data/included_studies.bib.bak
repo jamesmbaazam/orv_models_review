@@ -1,3 +1,4 @@
+% Encoding: UTF-8
 
 @Article{Sharomi2011,
   author        = {Sharomi, O. and Podder, C. N. and Gumel, A. B. and Mahmud, S. M. and Rubinstein, E.},
@@ -4655,3 +4656,5 @@ Conclusions: OPV cessation can successfully eliminate all circulating live polio
   mendeley-tags = {James,reviewed},
   pmid          = {31415559},
 }
+
+@Comment{jabref-meta: databaseType:bibtex;}
