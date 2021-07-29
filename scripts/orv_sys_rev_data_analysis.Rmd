@@ -176,13 +176,16 @@ modelling_objectives_by_outbreak_type_unique_entries <- long_data_no_fmd %>%
 
 modelling_objectives_by_outbreak_type_count <- modelling_objectives_by_outbreak_type_unique_entries %>% 
   count(objectives, outbreak_type, name = 'num_of_studies') %>% 
-  arrange(desc(num_of_studies))
+  arrange(desc(num_of_studies)) %>% 
+  pivot_wider(names_from = outbreak_type, 
+              values_from = num_of_studies
+              )
 
 knitr::kable(modelling_objectives_by_outbreak_type_count, 
-             col.names = c('Objective type', 
-                           'Outbreak type', 
-                           'Number of studies'
-                           ),
+             # col.names = c('Objective type', 
+             #               'Outbreak type', 
+             #               'Number of studies'
+             #               ),
              caption = 'Number of studies per objective and outbreak type'
              ) 
 
@@ -220,7 +223,7 @@ disease_studied_count <- long_data_no_fmd %>%
   count(disease, name = 'num_of_studies', sort = T) %>%
   ungroup() 
 
-knitr::kable(disease_studied_count, col.names = c('Disease', 'Number of times'))
+knitr::kable(disease_studied_count, col.names = c('Disease', 'Number of studies'))
 
 # Disease most studied
 disease_studied_most <- disease_studied_count %>% 
@@ -333,7 +336,7 @@ knitr::kable(continent_studied_most,
              )
 
 
-#Count the 
+#Count the number of continents studied
 continents_studied_by_count <- continents_studied_by_count %>% 
   filter(continent_studied != 'none') %>% 
   filter(continent_studied != 'global') %>% 
@@ -807,7 +810,165 @@ code_and_data_availability_count <- code_and_data_availability_unique_entries %>
 #Print the results
 knitr::kable(code_and_data_availability_count)
 
+```
+
+# Secondary summaries
+## Studies before 2006 (low frequency period) and during 2006-2019 (high frequency period)
+```{r echo=FALSE}
+#Number of studies before 2005 (low frequency period)
+n_studies_before_2006 <- compact_data_no_fmd %>% 
+  filter(publication_year < 2006) %>% 
+  summarise(n = n())
+
+print(paste('Number of studies before 2006:', n_studies_before_2006))
+
+#Number of studies between 2006-2019 (high frequency period)
+n_studies_btwn_2006_2019 <- compact_data_no_fmd %>% 
+  filter(publication_year >= 2006, publication_year <= 2019) %>% 
+  summarise(n = n())
+
+print(paste('Number of studies between 2006 and 2019:', n_studies_btwn_2006_2019))
+```
+
+## Citation tables of studies in peak periods by disease
+```{r echo=FALSE}
+#Citation table of studies in 2009 (Peak period)
+studies_in_2009_df <- compact_data_with_citation_keys %>%
+  filter(disease != 'fmd') %>%
+  filter(publication_year == 2009) %>%
+  arrange(disease) %>%
+  select(title, publication_year, disease, objectives, bibtexkey) %>% 
+  mutate(disease = str_replace(disease, ' ', ' and '))
+
+knitr::kable(studies_in_2009_df, caption = 'Studies published in 2009 (Peak year)')
+
+#Number of studies in 2009 per disease and objective type (Peak period)
+n_studies_2009_df <- studies_in_2009_df %>%
+  count(disease, objectives) %>% 
+  arrange(disease, objectives)
+
+knitr::kable(n_studies_2009_df, caption = 'Studies published in 2009 (Peak year)')
+
+
+
+#Citation table of studies in 2011 (Peak period)
+studies_in_2011_df <- compact_data_with_citation_keys %>%
+  filter(disease != 'fmd') %>%
+  filter(publication_year == 2011) %>%
+  arrange(disease) %>%
+  select(title, publication_year, disease, objectives, bibtexkey) %>% 
+  mutate(disease = str_replace(disease, ' ', ' and '))
+
+knitr::kable(studies_in_2011_df, caption = 'Studies published in 2011 (Peak year)')
+
+#Number of studies in 2011 per disease and objective type (Peak period)
+n_studies_2011_df <- studies_in_2011_df %>%
+  count(disease, objectives) %>% 
+  arrange(disease, objectives)
+
+knitr::kable(n_studies_2011_df, caption = 'Studies published in 2009 (Peak year)')
+
+
+
+#Citation table of studies from 2015-2016 per disease and objective type (Peak period)
+studies_between_2015_2016_df <- compact_data_with_citation_keys %>%
+  filter(disease != 'fmd') %>%
+  filter(publication_year >= 2015, publication_year <= 2016) %>%
+  arrange(disease, publication_year) %>%
+  select(title, publication_year, disease, objectives, bibtexkey) %>% 
+  mutate(disease = str_replace(disease, ' ', ' and '))
+
+knitr::kable(studies_between_2015_2016_df, caption = 'Studies published in 2015-2016 (Peak period)')
+
+#print('studies between 2015-2016:' , paste0(studies_between_2015_2016_df$title, sep = ';'))
+
+#Number of studies from 2015-2016 per disease and objective type (Peak period)
+n_studies_between_2015_2016_df <- studies_between_2015_2016_df %>% 
+  count(disease, objectives) %>% 
+  arrange(n)  
+
+knitr::kable(n_studies_between_2015_2016_df, caption = 'Papers published in 2015-2016 (Peak period)')
+
+
+#Citation table of studies in 2019 (Peak period)
+studies_in_2019_df <- compact_data_with_citation_keys %>%
+  filter(disease != 'fmd') %>%
+  filter(publication_year == 2019) %>%
+  arrange(disease) %>%
+  select(title, publication_year, disease, objectives, bibtexkey) %>% 
+  mutate(disease = str_replace(disease, ' ', ' and '))
+
+knitr::kable(studies_in_2019_df, caption = 'Studies published in 2019 (Peak year)')
+
+#Number of studies in 2019 per disease and objective type (Peak period)
+n_studies_in_2019_df <- studies_in_2019_df %>% 
+  count(disease, objectives) %>% 
+  arrange(n)  
+
+knitr::kable(n_studies_in_2019_df, caption = 'Number of studies published in 2019 per disease and objective type (Peak year)')
+
+
+#Total number of studies in 2019 (Peak period)
+n_studies_in_2019 <- n_studies_in_2019_df %>%  
+  summarise(n = n())
+
+print(paste('Number of studies in 2019 (Peak year):', 
+            n_studies_in_2019
+            )
+      )
+
+
+#Number of diseases in the peak periods
+
+peak_period_df <- bind_rows(studies_in_2009_df, 
+                            studies_in_2011_df, 
+                            studies_between_2015_2016_df, 
+                            studies_in_2019_df
+                            ) %>% 
+  arrange(disease, publication_year)
+
+knitr::kable(peak_period_df , 
+             caption = 'Studies published in peak period'
+             )
+
+n_studies_by_disease_and_objectives_peak_periods <- peak_period_df %>% 
+  count(disease, objectives) 
+
+knitr::kable(n_studies_by_disease_and_objectives_peak_periods, 
+             caption = 'Number of studies per disease and objective in peak periods'
+             )
+
+
+total_studies_by_disease_peak_period_df <- peak_period_df %>% 
+  count(disease) %>% 
+  arrange(n)
+
+knitr::kable(total_studies_by_disease_peak_period_df, 
+             caption = 'Number of studies per disease in peak periods'
+             )
+
+
+#Influenza during 2009 and 2011 peaks
+n_Influenza_studies_by_objectives_2009_2011 <- peak_period_df %>% 
+  filter(publication_year == 2009 | publication_year == 2011) %>% 
+  filter(disease == 'influenza') %>% 
+  count(objectives) 
+
+knitr::kable(n_Influenza_studies_by_objectives_2009_2011, 
+             caption = 'Number of Influenza studies per objective type (2009 & 2011)'
+             )
+
+#Ebola in 2015-2016
+n_ebola_studies_by_objectives_2015_2016 <- studies_between_2015_2016_df %>% 
+  filter(disease == 'ebola') %>% 
+  count(objectives) 
+
+knitr::kable(n_ebola_studies_by_objectives_2015_2016, 
+             caption = 'Number of Ebola studies per objective type (2015-2016)'
+             )
+
 
 
 ```
+
 
