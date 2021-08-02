@@ -3,14 +3,17 @@ title: "Systematic review of outbreak response models"
 author: "James Azam"
 date: "01/06/2021"
 output:
-  word_document:
-    keep_md: yes
   html_document:
     df_print: paged
+  word_document:
+    keep_md: no
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Sets the working directory for subsequent chunks, but not this chunk
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
 ```{r echo=FALSE, message=FALSE}
@@ -33,17 +36,11 @@ conflict_prefer('kable', 'knitr')
 ```
 
 
-```{r echo=FALSE}
-# Sets the working directory for subsequent chunks, but not this chunk
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
-
-```
-
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Load the script that cleans the data and saves it; 
 # this should be run each time, just in case something has changed in the data cleaning process;
 # The script clears the environment after cleaning the data
-source('./scripts/data_cleaning/orv_models_review_data_cleaning.R')
+#source(normalizePath('./scripts/data_cleaning/orv_models_review_data_cleaning.R'))
 
 #' Load the cleaned data 
 
@@ -651,30 +648,34 @@ plot(diseases_plot)
 #count the number of unique interventions modelled
 interventions_unique_entries <- long_data_no_fmd %>% 
   group_by(title) %>% 
-  distinct(intervention_modelled) %>% 
+  distinct(intervention_modelled, .keep_all = TRUE) %>% 
   ungroup()
 
-interventions_count <- interventions_unique_entries %>% 
-  group_by(intervention_modelled) %>% 
-  count(intervention_modelled, name = 'num_of_studies', sort = T) %>% 
-  ungroup() %>% 
-  filter(intervention_modelled != 'e.g.') %>% 
-  filter(intervention_modelled != 'various')
+#interventions are disease specific
+interventions_per_disease <- interventions_unique_entries %>% 
+  mutate(intervention_modelled = str_trim(intervention_modelled)) %>% 
+  filter(intervention_modelled != 'e.g.') %>% #remove false rows
+  filter(intervention_modelled != 'various') %>% #remove false rows
+  group_by(disease) %>% 
+  count(intervention_modelled, name = 'num_of_studies') %>% 
+  arrange(disease, desc(num_of_studies)) %>% 
+  ungroup() #%>% 
+ # pivot_wider(names_from = disease, values_from = num_of_studies)
     
 
-interventions_count_plot <- ggplot(data = interventions_count) + 
-  geom_bar(aes(x = intervention_modelled, 
-               y = num_of_studies), 
-           stat = 'identity',
-           fill = 'darkslategray2',
-           color = 'black'
-           ) +
-  coord_flip() +
-  theme_minimal()
+# interventions_per_disease_plot <- ggplot(data = interventions_per_disease) + 
+#   geom_bar(aes(x = intervention_modelled, 
+#                y = num_of_studies), 
+#            stat = 'identity',
+#            fill = 'darkslategray2',
+#            color = 'black'
+#            ) +
+#   coord_flip() +
+#   theme_minimal()
+# 
+# plot(interventions_count_plot)
 
-plot(interventions_count_plot)
-
-knitr::kable(interventions_count)
+knitr::kable(interventions_per_disease)
 
 ```
 
@@ -967,7 +968,10 @@ knitr::kable(n_ebola_studies_by_objectives_2015_2016,
              caption = 'Number of Ebola studies per objective type (2015-2016)'
              )
 
-
+#Studies that used both retrospective and prospective assessments
+knitr::kable(peak_period_df %>% filter(objectives == 'both'), 
+             caption = 'Studies with retrospective and prospective assessments'
+             )
 
 ```
 
