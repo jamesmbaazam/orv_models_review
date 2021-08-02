@@ -7,7 +7,13 @@ library('forcats')
 library('stringr')
 library('bib2df')
 
-
+if(!dir.exists('./data/final_data/cleaned_data'
+               )
+   ){
+    dir.create('./data/final_data/cleaned_data', 
+               showWarnings = FALSE
+               )
+   }
 
 #load the data and remove extraneous variables 
 review_data_wide <- read_delim('./data/final_data/raw_data/2021_07_28_wide.csv', 
