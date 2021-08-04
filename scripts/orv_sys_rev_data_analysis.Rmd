@@ -3,10 +3,10 @@ title: "Systematic review of outbreak response models"
 author: "James Azam"
 date: "01/06/2021"
 output:
-  html_document:
-    df_print: paged
   word_document:
     keep_md: no
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -611,7 +611,7 @@ plot(vax_impact_plot)
 
 ```
 
-# How many times each disease has been studied.
+# Number of studies per disease.
 
 ```{r echo=FALSE}
 #count the number of unique diseases studied
@@ -642,7 +642,7 @@ plot(diseases_plot)
 ```
 
 
-# How many times each intervention type has been modelled.
+# Number of studies per intervention.
 
 ```{r echo=FALSE}
 #count the number of unique interventions modelled
@@ -679,7 +679,7 @@ knitr::kable(interventions_per_disease)
 
 ```
 
-# How many times each outcome/metric has been used
+# Number of studies per outcome
 
 ```{r echo=FALSE}
 #count the number of unique outcomes measured
