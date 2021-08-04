@@ -3,10 +3,10 @@ title: "Systematic review of outbreak response models"
 author: "James Azam"
 date: "01/06/2021"
 output:
+  word_document:
+    keep_md: yes
   html_document:
     df_print: paged
-  word_document:
-    keep_md: no
 ---
 
 ```{r setup, include=FALSE}
