@@ -5,15 +5,16 @@ date: "01/06/2021"
 output:
   word_document:
     keep_md: yes
-  html_document:
-    df_print: paged
+#  html_notebook
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 
 # Sets the working directory for subsequent chunks, but not this chunk
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+#knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6)
 ```
 
 ```{r echo=FALSE, message=FALSE}
@@ -35,58 +36,55 @@ conflict_prefer('select', 'dplyr')
 conflict_prefer('kable', 'knitr')
 ```
 
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Source the script that cleans the raw data
+#```{r echo=FALSE}
 # Load the script that cleans the data and saves it; 
 # this should be run each time, just in case something has changed in the data cleaning process;
 # The script clears the environment after cleaning the data
-#source(normalizePath('./scripts/data_cleaning/orv_models_review_data_cleaning.R'))
+#source('./data_cleaning/orv_models_review_data_cleaning.R')
+#```
 
-#' Load the cleaned data 
+# Load the cleaned data 
 
-long_data <- read_rds(normalizePath('./data/final_data/cleaned_data/review_data_long_cleaned.rds'))
+```{r echo=FALSE}
+long_data <- read_rds('../data/final_data/cleaned_data/review_data_long_cleaned.rds')
 
-compact_data <- read_rds(normalizePath('./data/final_data/cleaned_data/review_data_compact_cleaned.rds'))
+#The cleaned data without citations
+compact_data_init <- read_rds('../data/final_data/cleaned_data/review_data_compact_cleaned.rds')
 
-compact_data_with_citation_keys <- read_rds(normalizePath('./data/final_data/cleaned_data/compact_data_with_citation_keys_cleaned.rds'))
-  
+compact_data <- compact_data_init %>% 
+    mutate(vax_modelled = ifelse(str_detect(intervention_modelled, 'vaccination'), 
+                               'yes', 
+                               'no')
+         ) %>% 
+  mutate(intervention_type = case_when(
+    vax_modelled == 'no' & vax_modelled_with_non_vax == 'no' ~ 'no_vax', #Vaccination was not modelled
+    vax_modelled == 'yes' & vax_modelled_with_non_vax == 'no' ~ 'vax_alongside', #when vax was modelled but not for comparison as a single intervention
+    vax_modelled == 'yes' & vax_modelled_with_non_vax == 'yes' ~ 'vax_single', #when vax was modelled as a single intervention
+  )) %>% 
+  relocate(vax_modelled, intervention_type, .after = 'intervention_modelled')
+
+# The data with citations 
+compact_data_with_citation_keys_init <- read_rds(normalizePath('../data/final_data/cleaned_data/compact_data_with_citation_keys_cleaned.rds')) 
+
+compact_data_with_citation_keys <- compact_data_with_citation_keys_init %>% 
+  mutate(vax_modelled = ifelse(str_detect(intervention_modelled, 'vaccination'), 
+                               'yes', 
+                               'no')
+         ) %>% 
+  mutate(intervention_type = case_when(
+    vax_modelled == 'no' & vax_modelled_with_non_vax == 'no' ~ 'no_vax', #Vaccination was not modelled
+    vax_modelled == 'yes' & vax_modelled_with_non_vax == 'no' ~ 'vax_alongside', #when vax was modelled but not for comparison as a single intervention
+    vax_modelled == 'yes' & vax_modelled_with_non_vax == 'yes' ~ 'vax_single', #when vax was modelled as a single intervention
+  )) %>% 
+  relocate(vax_modelled, intervention_type, .after = 'intervention_modelled')
 
 # Remove the FMD papers (NB: We only use the FMD papers for comparison)
 long_data_no_fmd <- long_data %>% filter(disease != 'fmd') 
 
 compact_data_no_fmd <- compact_data %>% filter(disease != 'fmd') 
 
-
-#' 1. Author-affiliation and country studied/contextual knowledge (Policy-making related questions)
-pm_data <- long_data_no_fmd %>% 
-  select(
-        title,
-        publication_year,
-        objectives,
-        author_affiliation_type,
-        disease,
-        country_studied,
-        author_in_country_studied,
-        outbreak_type,
-        modelling_timing,
-        data_used,
-        data_available
-        )  
-
-#' 2. Vaccine-impact (Questions related to the Science done)
-#' Select the variables related to vaccination modelling
-vax_impact_data <- compact_data_no_fmd %>% 
-    select(title, 
-           publication_year,
-           disease,
-           outbreak_type,
-           intervention_modelled,
-           vax_modelled_with_non_vax,
-           is_vax_effective,
-           outcome_measured
-    ) 
-
-
+compact_data_with_citation_keys_no_fmd <- compact_data_with_citation_keys %>% filter(disease != 'fmd') 
 ```
 
 
@@ -144,7 +142,9 @@ knitr::kable(modelling_objectives_count,
                            ),
              caption = 'Number of studies per objective type'
              )
+```
 
+```{r echo=FALSE}
 #Find the unique entries 
 outbreak_types_unique_entries <- long_data_no_fmd %>% 
   select(title, outbreak_type) %>% 
@@ -162,8 +162,9 @@ knitr::kable(outbreak_types_count,
                            ),
              caption = 'Number of studies per outbreak type'
              )
+```
 
-
+```{r echo=FALSE}
 #Find the number of unique entries per objective type and outbreak type combination  
 modelling_objectives_by_outbreak_type_unique_entries <- long_data_no_fmd %>% 
   select(title, objectives, outbreak_type) %>% 
@@ -185,35 +186,22 @@ knitr::kable(modelling_objectives_by_outbreak_type_count,
              #               ),
              caption = 'Number of studies per objective and outbreak type'
              ) 
-
-# modelling_objectives_n_timing_plot <- ggplot(data = modelling_objectives_by_outbreak_type_count) +
-#   geom_bar(aes(y = n,
-#                x = objectives,
-#                fill = outbreak_type
-#                ),
-#            stat = 'identity',
-#            position = position_dodge(),
-#            width = 0.6
-#            ) +
-#   labs(y = 'Number of papers') +
-#   scale_x_discrete(labels = c('both' = 'Prospective + Retrospective',
-#                               'future' = 'Prospective',
-#                               'past' = 'Retrospective')
-#                    ) +
-#   theme_minimal()
-# 
-# plot(modelling_objectives_n_timing_plot)
 ```
 
 
 
-```{r table2, echo=FALSE, results = 'asis'} 
+```{r echo=FALSE} 
 #Year with the highest publications
 max_pub_year <- compact_data_no_fmd %>% 
     count(publication_year, sort = T) %>% 
     filter(n == max(n)) 
 
-#Tally of how many times each disease was studied during the period
+print(max_pub_year)
+```
+
+
+## Number of studies per disease 
+```{r echo=FALSE}
 disease_studied_count <- long_data_no_fmd %>% 
   group_by(disease) %>% 
   distinct(title) %>% 
@@ -221,16 +209,18 @@ disease_studied_count <- long_data_no_fmd %>%
   ungroup() 
 
 knitr::kable(disease_studied_count, col.names = c('Disease', 'Number of studies'))
+```
 
-# Disease most studied
+
+### Disease most studied
+```{r echo=FALSE}
 disease_studied_most <- disease_studied_count %>% 
   filter(num_of_studies == max(num_of_studies)) 
 
 knitr::kable(disease_studied_most)
 ```
 
-# Number of studies per country and continent
-
+## Number of studies per country and continent
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 #FIXME: I have to cross tabulate the countries studied with number of studies with at least one author located in the country being studied.
@@ -268,11 +258,12 @@ knitr::kable(countries_studied_by_count_aggregated,
                            ),
              caption = 'Number/percentage of studies per country'
              )
- 
+``` 
 
 
 
-#Tally of how many times and percentage of times each CONTINENT has been studied
+## Number and percentage of studies per continent
+```{r echo=FALSE}
 continents_studied_by_count <- countries_studied_by_count %>% 
   mutate(continent_studied = countrycode(country_studied, 
                                           destination = 'continent',
@@ -302,8 +293,11 @@ knitr::kable(continents_studied_by_count,
                            ),
              caption = 'Number/percentage of studies per continent'
              )
- 
-#Find the country most studied but first remove the hypothetical countries 
+``` 
+
+
+### Country most studied 
+```{r echo=FALSE}
 countries_studied_most <- countries_studied_by_count %>% 
     filter(country_studied != 'none') %>%
     filter(num_of_studies == max(num_of_studies))
@@ -316,8 +310,11 @@ knitr::kable(countries_studied_most,
                            ),
              caption = 'Most studied country'
              )
+```
 
-#Find the continent most studied but first remove the hypothetical countries
+### Continent most studied
+```{r echo=FALSE}
+
 continent_studied_most <- continents_studied_by_count %>% 
     dplyr::filter(continent_studied != 'none') %>% 
     filter(num_of_studies == max(num_of_studies))
@@ -331,10 +328,11 @@ knitr::kable(continent_studied_most,
                            ),
              caption = 'Most studied continent'
              )
+```
 
-
-#Count the number of continents studied
-continents_studied_by_count <- continents_studied_by_count %>% 
+## Number of studies per continent
+```{r echo=FALSE}
+continents_studied <- continents_studied_by_count %>% 
   filter(continent_studied != 'none') %>% 
   filter(continent_studied != 'global') %>% 
   filter(continent_studied != 'northern_hemisphere') %>% 
@@ -343,24 +341,8 @@ continents_studied_by_count <- continents_studied_by_count %>%
   ungroup() %>% 
   mutate(percentage = round(num_of_studies/sum(num_of_studies)*100, 1))
 
-
-continent_studied_most_plot <- ggplot(data = continents_studied_by_count) + 
-  geom_bar(aes(x = reorder(continent_studied, num_of_studies), 
-               y = num_of_studies 
-               ),
-           width = 0.5,
-           stat = 'identity',
-           fill = 'darkslategray4', 
-           color = 'black'
-           ) +
-  scale_y_continuous(breaks = seq(0, 70, 10), 
-                     labels = seq(0, 70, 10)
-                     ) +
-  labs(x = 'Continent', y = 'Number of papers')
-  
-plot(continent_studied_most_plot)
-
-knitr::kable(continents_studied_by_count %>% arrange(percentage),
+#Print table of results
+knitr::kable(continents_studied_by_count %>% arrange(desc(percentage)),
              col.names = c('Continent',
                            'Number of papers',
                            'Percentage'
@@ -370,7 +352,7 @@ knitr::kable(continents_studied_by_count %>% arrange(percentage),
 
 ```
 
-# Highest number of studies per year and disease
+### Highest number of studies per year and disease
 
 ```{r echo=FALSE}
 knitr::kable(tibble(max_pub_year = max_pub_year$publication_year, 
@@ -385,14 +367,15 @@ knitr::kable(tibble(max_pub_year = max_pub_year$publication_year,
 # Primary objectives 
 
 ## 1. Is modelling being used to inform outbreak response policy-making? 
-### How are the results distributed according to collaboration type?
+
+### A. How are the results distributed according to collaboration type?
 
 Note that we do not include FMD in all the primary analyses. We only use it for comparisons, where necessary.
 
 ```{r echo=FALSE}
-# 1B. Create the collaboration types and reword the string NA
+# 1B. Create the unique combinations of collaboration types and reword the string NA
 collab_type_data <- compact_data_no_fmd %>%
-  select(c(title, publication_year, author_affiliation_type, author_in_country_studied)) %>% 
+  select(title, publication_year, author_affiliation_type, author_in_country_studied) %>% 
   mutate(publication_year = as.numeric(publication_year), 
          author_in_country_studied = as.character(author_in_country_studied)) %>% 
   arrange(publication_year) %>%
@@ -410,12 +393,12 @@ collab_types_count <- collab_type_data %>%
     count(author_affiliation_type) %>% 
     mutate(author_affiliation_type = as_factor(author_affiliation_type))
 
-knitr::kable(collab_types_count)
+knitr::kable(collab_types_count %>% arrange(desc(n)))
 ```
 
-### What has been the trend in collaboration over the years?
+### B. What has been the trend in collaboration over the years?
 
-```{r echo=FALSE, warning=FALSE, message=FALSE}
+```{r echo=FALSE, warning=FALSE, message=FALSE, eval=FALSE}
     
 collap_types_count_barplot <- collab_types_count %>%
     ggplot() + geom_bar(aes(x = reorder(author_affiliation_type, n),
@@ -443,17 +426,19 @@ knitr::kable(collab_types_count,
 
 ```
 
-### Proportions of the total publications by collaboration type (academic only versus others).
+### C. Proportions of the total publications per year shared by collaboration type (purely academic versus mixed).
 
 ```{r echo=FALSE}
 #' Count the number of each author affiliation type per year (including FMD)
 collap_types_by_year <- compact_data_no_fmd %>% 
-  mutate(year_aggreg = as.numeric(ifelse(publication_year < 2006, 2005, publication_year
+  mutate(year_aggreg = as.numeric(ifelse(publication_year < 2006, 
+                                         2005, 
+                                         publication_year
                                          )
                                   ), 
          collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
-                                         'Academic only', 
-                                         'Other collaborations')
+                                         'Purely academic', 
+                                         'Mixed')
                                  )
          ) %>% 
   count(year_aggreg, 
@@ -461,15 +446,12 @@ collap_types_by_year <- compact_data_no_fmd %>%
         name = 'total_publications'
         )
 
-#knitr::kable(collap_types_by_year)
-
 
 #The plot
 # Modify the x-axis labels to account for the lumping of the years from 2005 and below
 x_axis_labels <- as.character(seq(2005, 2020, 2))
 
 x_axis_labels[1] <- '1970-2005'
-
 
 
 collab_type_by_year_plot <- ggplot(data = collap_types_by_year) + 
@@ -487,7 +469,7 @@ collab_type_by_year_plot <- ggplot(data = collap_types_by_year) +
                      ) +
   labs(title = 'Publications per collaboration type over time',
        x = 'Year',
-       y = 'Proportion of publications',
+       y = 'Proportion of total publications in the year',
        fill = 'Collaboration type' 
          ) +
   theme_minimal(base_size = 12)
@@ -495,8 +477,36 @@ collab_type_by_year_plot <- ggplot(data = collap_types_by_year) +
 plot(collab_type_by_year_plot)
 
 ```
+####. Number of studies by collaboration type (purely academic versus mixed).
 
-### Academic collaborations versus other collaborations not involving academics.
+```{r echo=FALSE}
+#' Count the number of each author affiliation type per year (including FMD)
+collap_types_by_year <- compact_data_no_fmd %>% 
+  mutate(year_aggreg = as.numeric(ifelse(publication_year < 2006, 
+                                         2005, 
+                                         publication_year
+                                         )
+                                  ), 
+         collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
+                                         'Purely academic', 
+                                         'Mixed')
+                                 )
+         ) %>% 
+  count(year_aggreg, 
+        collab_type, 
+        name = 'total_publications'
+        ) %>% 
+  pivot_wider(names_from = collab_type, values_from = total_publications)
+
+knitr::kable(collap_types_by_year %>% clean_names() %>% adorn_totals(... = c(mixed, purely_academic)))
+
+```
+
+
+
+
+
+### Academic collaborations versus other non-academic collaborations (excluding purely academic collaborations).
 
 ```{r echo=FALSE}
 
@@ -545,12 +555,43 @@ plot(academic_collabs_trend)
 
 ```
 
+# Classification of interventions studied
+
+```{r echo=FALSE}
+intervention_categories <- compact_data_no_fmd %>% 
+  group_by(intervention_type, vax_modelled_with_non_vax) %>% 
+  count(is_vax_effective, sort = TRUE) 
+
+
+knitr::kable(intervention_categories)
+```
+
+### Classification of interventions by vaccination status
+```{r echo=FALSE}
+study_categories_by_vax <- intervention_categories %>% 
+  filter(intervention_type == 'vax_single')
+  
+knitr::kable(study_categories_by_vax)
+```
+
+## Citation table of studies that modelled vaccination as a single intervention
+```{r echo=FALSE}
+intervention_categories_citation_tbl <- compact_data_with_citation_keys_no_fmd %>%
+  filter(intervention_type == 'vax_single') %>% 
+  select(title, publication_year, bibtexkey, disease, intervention_modelled, vax_modelled, vax_modelled_with_non_vax, is_vax_effective) 
+
+knitr::kable(intervention_categories_citation_tbl %>% arrange(is_vax_effective
+, disease))
+
+```
+
+
 # Is vaccination the most effective when compared to other single interventions?
 
 
 ```{r echo=FALSE}
-#count the impact categories
-vax_impact_categories <- compact_data_no_fmd %>% 
+#count the vaccine impact categories (human diseases)
+vax_impact_categories_no_fmd <- compact_data_no_fmd %>% 
   filter(vax_modelled_with_non_vax == 'yes') %>% 
   count(is_vax_effective, 
         name = 'num_of_studies', 
@@ -558,11 +599,55 @@ vax_impact_categories <- compact_data_no_fmd %>%
         ) 
 
 #Print the results
-knitr::kable(vax_impact_categories, 
+knitr::kable(vax_impact_categories_no_fmd %>% adorn_totals, 
              col.names = c('Vaccination is most impactful', 
                            'Number of studies'
                            ),
-             caption = 'Studies\' conclusions about impact of vaccination'
+             caption = 'Studies\' conclusions about impact of vaccination (Human diseases)'
+             )
+
+
+#count the vaccine impact categories (FMD)
+vax_impact_categories_fmd <- compact_data %>%
+  filter(disease == 'fmd') %>% 
+  filter(vax_modelled_with_non_vax == 'yes') %>% 
+  count(is_vax_effective, 
+        name = 'num_of_studies', 
+        sort = T
+        ) 
+
+#Print the results
+knitr::kable(vax_impact_categories_fmd %>% adorn_totals, 
+             col.names = c('Vaccination is most impactful', 
+                           'Number of studies'
+                           ),
+             caption = 'Studies\' conclusions about impact of vaccination (FMD)'
+             )
+
+
+#Citation table for human diseases
+vax_impact_categories_citations_no_fmd <- compact_data_with_citation_keys %>% 
+  filter(disease != 'fmd') %>% 
+  filter(vax_modelled_with_non_vax == 'yes') %>% 
+  select(title, publication_year, disease, objectives, is_vax_effective, bibtexkey) %>% 
+  arrange(is_vax_effective) 
+
+#Print the results
+knitr::kable(vax_impact_categories_citations_no_fmd,
+             caption = 'Studies\' conclusions about impact of vaccination (citations for human diseases)'
+             )
+
+
+#Citation table for FMD
+vax_impact_categories_citations_fmd <- compact_data_with_citation_keys %>% 
+  filter(disease == 'fmd') %>% 
+  filter(vax_modelled_with_non_vax == 'yes') %>% 
+  select(title, publication_year, disease, objectives, is_vax_effective, bibtexkey) %>% 
+  arrange(is_vax_effective) 
+
+#Print the results
+knitr::kable(vax_impact_categories_citations_fmd,
+             caption = 'Studies\' conclusions about impact of vaccination (citations for human diseases)'
              )
 
 ```
@@ -642,7 +727,7 @@ plot(diseases_plot)
 ```
 
 
-# Number of studies per intervention.
+# Number of studies per disease and intervention.
 
 ```{r echo=FALSE}
 #count the number of unique interventions modelled
@@ -685,7 +770,7 @@ knitr::kable(interventions_per_disease)
 #count the number of unique outcomes measured
 outcomes_unique_entries <- long_data_no_fmd %>% 
   group_by(title) %>% 
-  distinct(outcome_measured) %>% 
+  distinct(outcome_measured, .keep_all = TRUE) %>% 
   ungroup()
   
 #Count the number of studies 
@@ -776,18 +861,18 @@ knitr::kable(parametrization_and_validation_count)
 
 ```
 
-# Sensitivity analyses
+# How is sensitivity analysis distributed by model structure?
 
 ```{r echo=FALSE}
 #Keep only the unique entries
 sensitivity_analysis_unique_entries <- long_data_no_fmd %>% 
   group_by(title) %>% 
-  distinct(sensitivity_analysis) %>% 
+  distinct(sensitivity_analysis, .keep_all = TRUE) %>% 
   ungroup()
 
 #Count the number of studies
 sensitivity_analysis_count <- sensitivity_analysis_unique_entries %>% 
-  count(sensitivity_analysis, name = 'num_of_studies') 
+  count(model_structure, sensitivity_analysis, name = 'num_of_studies') 
 
 #Print the table
 knitr::kable(sensitivity_analysis_count)
@@ -800,7 +885,7 @@ knitr::kable(sensitivity_analysis_count)
 #Keep only the unique entries
 code_and_data_availability_unique_entries <- long_data_no_fmd %>% 
   group_by(title) %>% 
-  distinct(data_used, data_available) %>% 
+  distinct(data_used, data_available, .keep_all = TRUE) %>% 
   ungroup() %>% 
   filter(data_used != 'no') 
 
