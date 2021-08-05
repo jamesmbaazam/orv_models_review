@@ -7,24 +7,20 @@ library('forcats')
 library('stringr')
 library('bib2df')
 
-if(!dir.exists('./data/final_data/cleaned_data'
-               )
-   ){
+#Check if the folder for saving the cleaned files exists, if not, create a folder
+if(!dir.exists('./data/final_data/cleaned_data'))
+    {
     dir.create('./data/final_data/cleaned_data', 
-               showWarnings = FALSE
-               )
-   }
+               showWarnings = FALSE)
+    }
 
-#load the data and remove extraneous variables 
-review_data_wide <- read_delim('./data/final_data/raw_data/2021_07_28_wide.csv', 
-                               delim = ';', 
-                               na = c('', 'NA')
-                               )
-review_data_compact <- read_delim('./data/final_data/raw_data/2021_07_28_compact.csv', 
+#load the review data extraction results and remove extraneous variables 
+review_data_compact <- read_delim('./data/final_data/raw_data/orv_review_compact_data.csv', 
                                           delim = ';', 
                                           na = c('', 'NA')
                                           )
 
+#load the citation data for merging
 citation_data <- bib2df('./data/final_data/raw_data/included_studies.bib', 
                         separate_names = FALSE
                         ) %>% 
