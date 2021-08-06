@@ -503,6 +503,32 @@ knitr::kable(collap_types_by_year %>% clean_names() %>% adorn_totals(... = c(mix
 ```
 
 
+```{r echo=FALSE}
+#' Count the number of each author affiliation type per year
+collap_types_by_year <- compact_data_no_fmd %>% 
+  mutate(year_aggreg = as.numeric(ifelse(publication_year < 2006, 
+                                         2005, 
+                                         publication_year
+                                         )
+                                  ), 
+         collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
+                                         'Purely academic', 
+                                         'Mixed')
+                                 )
+         ) %>% 
+  count(year_aggreg, 
+        collab_type, 
+        name = 'total_publications'
+        ) 
+
+collap_types_by_year_plot <- ggplot(data = collap_types_by_year, aes(x = year_aggreg, y = total_publications), color = 'black') + geom_bar(aes(fill = collab_type), stat = 'identity', position = 'dodge')
+
+plot(collap_types_by_year_plot)
+
+
+```
+
+Even though non-academic collaborations increased over time, the share of total publications per year over time decreased.
 
 
 
