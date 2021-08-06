@@ -366,9 +366,9 @@ knitr::kable(tibble(max_pub_year = max_pub_year$publication_year,
 
 # Primary objectives 
 
-## 1. Is modelling being used to inform outbreak response policy-making? 
+## 1.A. Is modelling being used to inform outbreak response policy-making? 
 
-### A. How are the results distributed according to collaboration type?
+### I. How are the results distributed according to collaboration type?
 
 Note that we do not include FMD in all the primary analyses. We only use it for comparisons, where necessary.
 
@@ -396,7 +396,7 @@ collab_types_count <- collab_type_data %>%
 knitr::kable(collab_types_count %>% arrange(desc(n)))
 ```
 
-### B. What has been the trend in collaboration over the years?
+### II. What has been the trend in collaboration over the years?
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE, eval=FALSE}
     
@@ -426,7 +426,7 @@ knitr::kable(collab_types_count,
 
 ```
 
-### C. Proportions of the total publications per year shared by collaboration type (purely academic versus mixed).
+### III. Proportions of the total publications per year shared by collaboration type (purely academic versus mixed).
 
 ```{r echo=FALSE}
 #' Count the number of each author affiliation type per year (including FMD)
@@ -477,7 +477,7 @@ collab_type_by_year_plot <- ggplot(data = collap_types_by_year) +
 plot(collab_type_by_year_plot)
 
 ```
-####. Number of studies by collaboration type (purely academic versus mixed).
+### IV. Number of studies by collaboration type (purely academic versus mixed).
 
 ```{r echo=FALSE}
 #' Count the number of each author affiliation type per year (including FMD)
@@ -521,7 +521,16 @@ collap_types_by_year <- compact_data_no_fmd %>%
         name = 'total_publications'
         ) 
 
-collap_types_by_year_plot <- ggplot(data = collap_types_by_year, aes(x = year_aggreg, y = total_publications), color = 'black') + geom_bar(aes(fill = collab_type), stat = 'identity', position = 'dodge')
+collap_types_by_year_plot <- ggplot(data = collap_types_by_year, 
+                                    aes(x = year_aggreg, 
+                                        y = total_publications
+                                        ), 
+                                    color = 'black') + 
+  geom_bar(aes(fill = collab_type), 
+           stat = 'identity', 
+           position = 'dodge'
+           ) +
+  labs(x = 'Year', y = 'Total publications')
 
 plot(collap_types_by_year_plot)
 
@@ -532,7 +541,7 @@ Even though non-academic collaborations increased over time, the share of total 
 
 
 
-### Academic collaborations versus other non-academic collaborations (excluding purely academic collaborations).
+### V. Academic collaborations versus other non-academic collaborations (excluding purely academic collaborations).
 
 ```{r echo=FALSE}
 
@@ -581,7 +590,55 @@ plot(academic_collabs_trend)
 
 ```
 
-# Classification of interventions studied
+# B. How often are papers authored by locals?
+```{r}
+author_location_count_by_disease_wide <- compact_data_no_fmd %>%
+  separate_rows(disease, sep = ' ') %>% 
+#  filter(author_in_country_studied != 'not_applicable') %>% 
+  mutate(author_in_country_studied = as_factor(author_in_country_studied), 
+         disease = as_factor(disease)
+         ) %>% 
+  group_by(disease) %>%
+  distinct(title, .keep_all = TRUE) %>% 
+  count(author_in_country_studied) %>% 
+  pivot_wider(names_from = author_in_country_studied, values_from = n) %>% 
+  mutate(yes = ifelse(is.na(yes), 0, yes),
+         no = ifelse(is.na(no), 0, no),
+         not_applicable = ifelse(is.na(not_applicable), 0, not_applicable),
+         total = yes + no + not_applicable
+         ) %>% 
+  arrange(desc(total))
+
+
+knitr::kable(author_location_count_by_disease_wide)
+```
+
+
+```{r}
+author_location_count_by_disease_long <- author_location_count_by_disease_wide %>% 
+  select(-c(not_applicable, total)) %>% 
+  pivot_longer(cols = c(yes, no), 
+               names_to = 'author_in_country_studied',
+               values_to = 'n'
+               )
+
+
+author_location_count_by_disease_plot <- ggplot(data = author_location_count_by_disease_long, 
+       aes(x = reorder(disease, n), 
+           y = n
+           )
+       ) + geom_bar(aes(fill = author_in_country_studied),
+                    stat = 'identity',
+                    position = position_fill(reverse = TRUE)
+                    ) +
+  labs(x = 'Disease', y = 'Proportion of total studies') +
+  coord_flip()
+
+plot(author_location_count_by_disease_plot)
+```
+
+# 2. Is vaccination always the most impactful single intervention?
+## Classification of interventions studied
 
 ```{r echo=FALSE}
 intervention_categories <- compact_data_no_fmd %>% 
@@ -722,34 +779,77 @@ plot(vax_impact_plot)
 
 ```
 
-# Number of studies per disease.
+# Number of studies per disease 
+
+## By collaboration type
 
 ```{r echo=FALSE}
 #count the number of unique diseases studied
-disease_studied <- long_data_no_fmd %>% 
+disease_studied_by_collab_type <- compact_data_no_fmd %>% 
+  separate_rows(disease,  sep = ' ') %>% 
+  mutate(disease = as_factor(disease), 
+         author_affiliation_type = as_factor(str_replace(author_affiliation_type, ' ', '+'))
+         ) %>% 
+    mutate(collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
+                                         'purely_academic', 
+                                         'mixed')
+                                 )
+         ) %>% 
   group_by(disease) %>% 
-  distinct(title) %>% 
-  count(disease, sort = TRUE, name = 'num_of_studies') %>% 
-  mutate(disease = as_factor(disease))
+  distinct(title, .keep_all = TRUE) %>% 
+  count(disease, collab_type, sort = TRUE) %>%
+  pivot_wider(names_from = collab_type, values_from = n) %>% 
+  mutate(purely_academic = ifelse(is.na(purely_academic), 0, purely_academic),
+         mixed = ifelse(is.na(mixed), 0, mixed),
+         total = purely_academic + mixed
+         ) %>% 
+  arrange(desc(total))
 
+knitr::kable(disease_studied_by_collab_type)
+```
 
-diseases_plot <- ggplot(data = disease_studied) + 
-    geom_bar(aes(x = reorder(disease, num_of_studies), 
-                 y = num_of_studies
-                 ), 
-             stat = 'identity',
-             fill = 'dodgerblue3',
-             color = 'black'
-             ) + 
-    scale_y_continuous(breaks = seq(0, 140, 10),
-                       labels = seq(0, 140, 10)
-                       ) +
-    coord_flip(expand = FALSE) +
-    labs(x = 'Disease', y = 'Number of studies') +
-    theme_minimal(base_size = 12)
+## By outbreak type
 
+```{r echo=FALSE}
+#count the number of unique diseases studied
+disease_studied_by_outbreak_type <- compact_data_no_fmd %>% 
+  separate_rows(disease,  sep = ' ') %>% 
+  mutate(disease = as_factor(disease), 
+         outbreak_type = as_factor(str_replace(outbreak_type, ' ', '+'))
+         ) %>% 
+  group_by(disease) %>% 
+  distinct(title, .keep_all = TRUE) %>% 
+  count(disease, outbreak_type, sort = TRUE) %>%
+  pivot_wider(names_from = outbreak_type, values_from = n) %>% 
+  mutate(hypothetical_outbreak = ifelse(is.na(hypothetical_outbreak), 0, hypothetical_outbreak),
+         real_outbreak = ifelse(is.na(real_outbreak), 0, real_outbreak), 
+         total = hypothetical_outbreak + real_outbreak) %>% 
+  arrange(desc(total))
 
-plot(diseases_plot)
+knitr::kable(disease_studied_by_outbreak_type)
+```
+
+## By objective type
+
+```{r echo=FALSE}
+#count the number of unique diseases studied
+disease_studied_by_objective_type <- compact_data_no_fmd %>% 
+  separate_rows(disease,  sep = ' ') %>% 
+  mutate(disease = as_factor(disease), 
+         objectives = as_factor(objectives)
+         ) %>% 
+  group_by(disease) %>% 
+  distinct(title, .keep_all = TRUE) %>% 
+  count(disease, objectives) %>%
+  pivot_wider(names_from = objectives, values_from = n) %>% 
+  mutate(future = ifelse(is.na(future), 0, future),
+         past = ifelse(is.na(past), 0, past), 
+         both = ifelse(is.na(both), 0, both), 
+         total = future + past + both
+         ) %>% 
+  arrange(desc(total))
+
+knitr::kable(disease_studied_by_objective_type)
 ```
 
 
@@ -770,21 +870,7 @@ interventions_per_disease <- interventions_unique_entries %>%
   group_by(disease) %>% 
   count(intervention_modelled, name = 'num_of_studies') %>% 
   arrange(disease, desc(num_of_studies)) %>% 
-  ungroup() #%>% 
- # pivot_wider(names_from = disease, values_from = num_of_studies)
-    
-
-# interventions_per_disease_plot <- ggplot(data = interventions_per_disease) + 
-#   geom_bar(aes(x = intervention_modelled, 
-#                y = num_of_studies), 
-#            stat = 'identity',
-#            fill = 'darkslategray2',
-#            color = 'black'
-#            ) +
-#   coord_flip() +
-#   theme_minimal()
-# 
-# plot(interventions_count_plot)
+  ungroup()
 
 knitr::kable(interventions_per_disease)
 
