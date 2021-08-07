@@ -36,17 +36,19 @@ conflict_prefer('select', 'dplyr')
 conflict_prefer('kable', 'knitr')
 ```
 
+
+```{r echo=FALSE, include=FALSE, eval=FALSE}
 # Source the script that cleans the raw data
-#```{r echo=FALSE}
 # Load the script that cleans the data and saves it; 
 # this should be run each time, just in case something has changed in the data cleaning process;
 # The script clears the environment after cleaning the data
 #source('./data_cleaning/orv_models_review_data_cleaning.R')
-#```
+```
 
+
+
+```{r echo=FALSE, include=FALSE}
 # Load the cleaned data 
-
-```{r echo=FALSE}
 long_data <- read_rds('../data/final_data/cleaned_data/review_data_long_cleaned.rds')
 
 #The cleaned data without citations
@@ -594,7 +596,6 @@ plot(academic_collabs_trend)
 ```{r}
 author_location_count_by_disease_wide <- compact_data_no_fmd %>%
   separate_rows(disease, sep = ' ') %>% 
-#  filter(author_in_country_studied != 'not_applicable') %>% 
   mutate(author_in_country_studied = as_factor(author_in_country_studied), 
          disease = as_factor(disease)
          ) %>% 
@@ -602,11 +603,8 @@ author_location_count_by_disease_wide <- compact_data_no_fmd %>%
   distinct(title, .keep_all = TRUE) %>% 
   count(author_in_country_studied) %>% 
   pivot_wider(names_from = author_in_country_studied, values_from = n) %>% 
-  mutate(yes = ifelse(is.na(yes), 0, yes),
-         no = ifelse(is.na(no), 0, no),
-         not_applicable = ifelse(is.na(not_applicable), 0, not_applicable),
-         total = yes + no + not_applicable
-         ) %>% 
+  replace_na(list(yes = 0, no = 0, not_applicable = 0)) %>% 
+  mutate(total = not_applicable + no + yes) %>% 
   arrange(desc(total))
 
 
@@ -638,23 +636,41 @@ plot(author_location_count_by_disease_plot)
 ```
 
 # 2. Is vaccination always the most impactful single intervention?
-## Classification of interventions studied
+
+## Classification of interventions by inclusion/exclusion of vaccination
+
+### Human diseases
+```{r echo=FALSE}
+intervention_categories_human_diseases <- compact_data_no_fmd %>% 
+  group_by(intervention_type, vax_modelled_with_non_vax) %>% 
+  count(is_vax_effective, sort = TRUE) %>% 
+  pivot_wider(names_from = vax_modelled_with_non_vax, values_from = n) %>% 
+  replace_na(list(no = 0, yes = 0))
+
+
+knitr::kable(intervention_categories_human_diseases)
+```
+### FMD
 
 ```{r echo=FALSE}
-intervention_categories <- compact_data_no_fmd %>% 
+intervention_categories_fmd <- compact_data %>% 
+  filter(disease == 'fmd') %>% 
   group_by(intervention_type, vax_modelled_with_non_vax) %>% 
-  count(is_vax_effective, sort = TRUE) 
+  count(is_vax_effective, sort = TRUE) %>% 
+  filter(vax_modelled_with_non_vax == 'yes') %>% 
+  pivot_wider(names_from = is_vax_effective, values_from = n) %>% 
+  adorn_totals(where = 'col')
 
 
-knitr::kable(intervention_categories)
+knitr::kable(intervention_categories_fmd)
 ```
 
-### Classification of interventions by vaccination status
+## Classification of interventions by inclusion of vaccination 
 ```{r echo=FALSE}
-study_categories_by_vax <- intervention_categories %>% 
+study_categories_by_vax_single <- intervention_categories_human_diseases %>% 
   filter(intervention_type == 'vax_single')
   
-knitr::kable(study_categories_by_vax)
+knitr::kable(study_categories_by_vax_single)
 ```
 
 ## Citation table of studies that modelled vaccination as a single intervention
@@ -671,9 +687,8 @@ knitr::kable(intervention_categories_citation_tbl %>% arrange(is_vax_effective
 
 # Is vaccination the most effective when compared to other single interventions?
 
-
+## Vaccine impact categories (human diseases)
 ```{r echo=FALSE}
-#count the vaccine impact categories (human diseases)
 vax_impact_categories_no_fmd <- compact_data_no_fmd %>% 
   filter(vax_modelled_with_non_vax == 'yes') %>% 
   count(is_vax_effective, 
@@ -688,9 +703,10 @@ knitr::kable(vax_impact_categories_no_fmd %>% adorn_totals,
                            ),
              caption = 'Studies\' conclusions about impact of vaccination (Human diseases)'
              )
+```
 
-
-#count the vaccine impact categories (FMD)
+## Vaccine impact categories (FMD)
+```{r echo=FALSE}
 vax_impact_categories_fmd <- compact_data %>%
   filter(disease == 'fmd') %>% 
   filter(vax_modelled_with_non_vax == 'yes') %>% 
@@ -706,9 +722,10 @@ knitr::kable(vax_impact_categories_fmd %>% adorn_totals,
                            ),
              caption = 'Studies\' conclusions about impact of vaccination (FMD)'
              )
+```
 
-
-#Citation table for human diseases
+## Citation table for human diseases
+```{r echo=FALSE}
 vax_impact_categories_citations_no_fmd <- compact_data_with_citation_keys %>% 
   filter(disease != 'fmd') %>% 
   filter(vax_modelled_with_non_vax == 'yes') %>% 
@@ -719,9 +736,10 @@ vax_impact_categories_citations_no_fmd <- compact_data_with_citation_keys %>%
 knitr::kable(vax_impact_categories_citations_no_fmd,
              caption = 'Studies\' conclusions about impact of vaccination (citations for human diseases)'
              )
+```
 
-
-#Citation table for FMD
+## Citation table for FMD
+```{r echo=FALSE}
 vax_impact_categories_citations_fmd <- compact_data_with_citation_keys %>% 
   filter(disease == 'fmd') %>% 
   filter(vax_modelled_with_non_vax == 'yes') %>% 
@@ -799,10 +817,8 @@ disease_studied_by_collab_type <- compact_data_no_fmd %>%
   distinct(title, .keep_all = TRUE) %>% 
   count(disease, collab_type, sort = TRUE) %>%
   pivot_wider(names_from = collab_type, values_from = n) %>% 
-  mutate(purely_academic = ifelse(is.na(purely_academic), 0, purely_academic),
-         mixed = ifelse(is.na(mixed), 0, mixed),
-         total = purely_academic + mixed
-         ) %>% 
+  replace_na(list(purely_academic = 0, mixed = 0)) %>% 
+  mutate(total = purely_academic + mixed) %>% 
   arrange(desc(total))
 
 knitr::kable(disease_studied_by_collab_type)
@@ -821,9 +837,8 @@ disease_studied_by_outbreak_type <- compact_data_no_fmd %>%
   distinct(title, .keep_all = TRUE) %>% 
   count(disease, outbreak_type, sort = TRUE) %>%
   pivot_wider(names_from = outbreak_type, values_from = n) %>% 
-  mutate(hypothetical_outbreak = ifelse(is.na(hypothetical_outbreak), 0, hypothetical_outbreak),
-         real_outbreak = ifelse(is.na(real_outbreak), 0, real_outbreak), 
-         total = hypothetical_outbreak + real_outbreak) %>% 
+  replace_na(list(hypothetical_outbreak = 0, real_outbreak = 0)) %>% 
+  mutate(total = hypothetical_outbreak + real_outbreak) %>% 
   arrange(desc(total))
 
 knitr::kable(disease_studied_by_outbreak_type)
@@ -842,16 +857,38 @@ disease_studied_by_objective_type <- compact_data_no_fmd %>%
   distinct(title, .keep_all = TRUE) %>% 
   count(disease, objectives) %>%
   pivot_wider(names_from = objectives, values_from = n) %>% 
-  mutate(future = ifelse(is.na(future), 0, future),
-         past = ifelse(is.na(past), 0, past), 
-         both = ifelse(is.na(both), 0, both), 
-         total = future + past + both
-         ) %>% 
+  replace_na(list(future = 0, past = 0, both = 0)) %>% 
+  mutate(total = future + past + both) %>% 
   arrange(desc(total))
 
 knitr::kable(disease_studied_by_objective_type)
 ```
 
+## FMD by collaboration type
+```{r echo=FALSE}
+fmd_studies_by_collab_type <- compact_data %>% 
+  filter(disease == 'fmd') %>% 
+  mutate(disease = as_factor(disease), 
+         author_affiliation_type = as_factor(str_replace(author_affiliation_type, ' ', '+'))
+         ) %>% 
+  mutate(collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
+                                         'purely_academic', 
+                                         'mixed')
+                                 )
+         ) %>% 
+  count(collab_type, sort = TRUE) 
+
+knitr::kable(fmd_studies_by_collab_type)
+```
+## FMD by objective type
+```{r echo=FALSE}
+fmd_studies_by_objective_and_outbreak_type <- compact_data %>% 
+  filter(disease == 'fmd') %>% 
+  count(objectives, outbreak_type) %>% 
+  pivot_wider(names_from = outbreak_type, values_from = n)
+
+knitr::kable(fmd_studies_by_objective_and_outbreak_type)
+```
 
 # Number of studies per disease and intervention.
 
@@ -931,20 +968,17 @@ knitr::kable(model_structure_unique_count)
 ```
 
 
-# Cross-tabulation of the model structure by parametrization and validation types
+# Number of studies by the model structure, parametrization, and validation types
 
 ```{r echo=FALSE}
 #Cross tally the model structure with parametrization and validation categories
 #FIXME: Check that studies are either not being under counted or double-counted. What do I want to count here? Is it the unique studies per method or combined method because most studies used a combination of parametrization methods especially
-parametrization_and_validation_by_model_structure <- long_data_no_fmd %>%
-  group_by(parametrization) %>% 
-  distinct(title, model_structure, parametrization, validation) %>% 
-  tabyl(var1 = model_structure, 
-        var2 = validation,
-        var3 = parametrization
-        ) %>% 
-  bind_rows(.id = 'parametrization_method') %>% 
-  relocate('parametrization_method', .after = 'model_structure')
+parametrization_and_validation_by_model_structure <- compact_data_no_fmd %>%
+  mutate(parametrization = str_replace(parametrization, ' ', ' + '),
+         validation = str_replace(validation, ' ', ' + ')
+         ) %>% 
+  count(model_structure, parametrization, validation) %>% 
+  pivot_wider(names_from = model_structure, values_from = n)
   
 
 #Print the table of results
@@ -991,27 +1025,39 @@ knitr::kable(sensitivity_analysis_count)
 
 ```
 
-# Code and data availability
+# Data use and availability
 
 ```{r echo=FALSE}
 #Keep only the unique entries
-code_and_data_availability_unique_entries <- long_data_no_fmd %>% 
-  group_by(title) %>% 
-  distinct(data_used, data_available, .keep_all = TRUE) %>% 
-  ungroup() %>% 
-  filter(data_used != 'no') 
-
-#Count the number of studies
-code_and_data_availability_count <- code_and_data_availability_unique_entries %>% 
-  count(data_used, data_available, name = 'num_of_studies')
+code_and_data_availability_count <- compact_data_no_fmd %>% 
+  count(data_used, data_available) %>% 
+  pivot_wider(names_from = data_available, values_from = n) %>% 
+  replace_na(list(not_applicable = 0, 
+                  yes = 0, 
+                  no = 0
+                  )
+             )
 
 #Print the results
-knitr::kable(code_and_data_availability_count)
+knitr::kable(code_and_data_availability_count, caption = 'Data use and availability')
+
+```
+# Code availability
+
+```{r echo=FALSE}
+#Keep only the unique entries
+code_availability_count <- compact_data_no_fmd %>% 
+  count(simulation_code_available) 
+
+#Print the results
+knitr::kable(code_availability_count, caption = 'Code availability')
 
 ```
 
+
+
 # Secondary summaries
-## Studies before 2006 (low frequency period) and during 2006-2019 (high frequency period)
+## Studies before 2006 (low frequency period) 
 ```{r echo=FALSE}
 #Number of studies before 2005 (low frequency period)
 n_studies_before_2006 <- compact_data_no_fmd %>% 
@@ -1019,8 +1065,9 @@ n_studies_before_2006 <- compact_data_no_fmd %>%
   summarise(n = n())
 
 print(paste('Number of studies before 2006:', n_studies_before_2006))
-
-#Number of studies between 2006-2019 (high frequency period)
+```
+## Number of studies between 2006-2019 (high frequency period)
+```{r echo=FALSE}
 n_studies_btwn_2006_2019 <- compact_data_no_fmd %>% 
   filter(publication_year >= 2006, publication_year <= 2019) %>% 
   summarise(n = n())
@@ -1028,85 +1075,75 @@ n_studies_btwn_2006_2019 <- compact_data_no_fmd %>%
 print(paste('Number of studies between 2006 and 2019:', n_studies_btwn_2006_2019))
 ```
 
-## Citation tables of studies in peak periods by disease
+# Exploration of the peak periods (2009-2011, 2015-2016, 2019)
+
+## Citations of studies during 2009-2011
 ```{r echo=FALSE}
-#Citation table of studies in 2009 (Peak period)
-studies_in_2009_df <- compact_data_with_citation_keys %>%
-  filter(disease != 'fmd') %>%
-  filter(publication_year == 2009) %>%
+#Citation table of studies during 2009-2011 (Peak period)
+studies_in_2009_2011_df <- compact_data_with_citation_keys_no_fmd %>%
+  separate_rows(disease, sep = ' ') %>% 
+  filter(publication_year >= 2009, publication_year <= 2011) %>%
   arrange(disease) %>%
   select(title, publication_year, disease, objectives, bibtexkey) %>% 
   mutate(disease = str_replace(disease, ' ', ' and '))
 
-knitr::kable(studies_in_2009_df, caption = 'Studies published in 2009 (Peak year)')
-
-#Number of studies in 2009 per disease and objective type (Peak period)
-n_studies_2009_df <- studies_in_2009_df %>%
+knitr::kable(studies_in_2009_2011_df, caption = 'Studies published during 2009-2011 (Peak period)')
+```
+### Number of studies during 2009-2011 per disease and objective type (Peak period)
+```{r echo=FALSE}
+n_studies_2009_2011_df <- studies_in_2009_2011_df %>%
   count(disease, objectives) %>% 
-  arrange(disease, objectives)
+  arrange(disease, n) %>% 
+  pivot_wider(names_from = objectives, values_from = n) %>% 
+  replace_na(list(both = 0, future = 0, past = 0))
 
-knitr::kable(n_studies_2009_df, caption = 'Studies published in 2009 (Peak year)')
+knitr::kable(n_studies_2009_2011_df, caption = 'Studies published during 2009-2011 (Peak period)')
+```
 
-
-
-#Citation table of studies in 2011 (Peak period)
-studies_in_2011_df <- compact_data_with_citation_keys %>%
-  filter(disease != 'fmd') %>%
-  filter(publication_year == 2011) %>%
-  arrange(disease) %>%
-  select(title, publication_year, disease, objectives, bibtexkey) %>% 
-  mutate(disease = str_replace(disease, ' ', ' and '))
-
-knitr::kable(studies_in_2011_df, caption = 'Studies published in 2011 (Peak year)')
-
-#Number of studies in 2011 per disease and objective type (Peak period)
-n_studies_2011_df <- studies_in_2011_df %>%
-  count(disease, objectives) %>% 
-  arrange(disease, objectives)
-
-knitr::kable(n_studies_2011_df, caption = 'Studies published in 2009 (Peak year)')
-
-
-
-#Citation table of studies from 2015-2016 per disease and objective type (Peak period)
-studies_between_2015_2016_df <- compact_data_with_citation_keys %>%
-  filter(disease != 'fmd') %>%
+## Citation table of studies during 2015-2016 per disease and objective type (Peak period)
+```{r echo=FALSE}
+studies_between_2015_2016_df <- compact_data_with_citation_keys_no_fmd %>%
+  separate_rows(disease, sep = ' ') %>% 
   filter(publication_year >= 2015, publication_year <= 2016) %>%
   arrange(disease, publication_year) %>%
   select(title, publication_year, disease, objectives, bibtexkey) %>% 
   mutate(disease = str_replace(disease, ' ', ' and '))
 
 knitr::kable(studies_between_2015_2016_df, caption = 'Studies published in 2015-2016 (Peak period)')
+```
 
-#print('studies between 2015-2016:' , paste0(studies_between_2015_2016_df$title, sep = ';'))
-
-#Number of studies from 2015-2016 per disease and objective type (Peak period)
+### Number of studies from 2015-2016 per disease and objective type (Peak period)
+```{r echo=FALSE}
 n_studies_between_2015_2016_df <- studies_between_2015_2016_df %>% 
   count(disease, objectives) %>% 
-  arrange(n)  
+  arrange(desc(n))  %>% 
+  pivot_wider(names_from = objectives, values_from = n) %>% 
+  replace_na(list(both = 0, future = 0, past = 0)) 
 
 knitr::kable(n_studies_between_2015_2016_df, caption = 'Papers published in 2015-2016 (Peak period)')
+```
 
-
-#Citation table of studies in 2019 (Peak period)
-studies_in_2019_df <- compact_data_with_citation_keys %>%
-  filter(disease != 'fmd') %>%
+## Citation table of studies in 2019 (Peak period)
+```{r echo=FALSE}
+studies_in_2019_df <- compact_data_with_citation_keys_no_fmd %>%
   filter(publication_year == 2019) %>%
   arrange(disease) %>%
   select(title, publication_year, disease, objectives, bibtexkey) %>% 
   mutate(disease = str_replace(disease, ' ', ' and '))
 
 knitr::kable(studies_in_2019_df, caption = 'Studies published in 2019 (Peak year)')
-
-#Number of studies in 2019 per disease and objective type (Peak period)
+```
+### Number of studies in 2019 per disease and objective type (Peak period)
+```{r echo=FALSE}
 n_studies_in_2019_df <- studies_in_2019_df %>% 
   count(disease, objectives) %>% 
   arrange(n)  
 
 knitr::kable(n_studies_in_2019_df, caption = 'Number of studies published in 2019 per disease and objective type (Peak year)')
+```
 
-
-#Total number of studies in 2019 (Peak period)
+### Total number of studies in 2019 (Peak period)
+```{r echo=FALSE}
 n_studies_in_2019 <- n_studies_in_2019_df %>%  
   summarise(n = n())
 
@@ -1114,12 +1151,11 @@ print(paste('Number of studies in 2019 (Peak year):',
             n_studies_in_2019
             )
       )
+```
 
-
-#Number of diseases in the peak periods
-
-peak_period_df <- bind_rows(studies_in_2009_df, 
-                            studies_in_2011_df, 
+## Number of diseases in the peak periods
+```{r echo=FALSE}
+peak_period_df <- bind_rows(studies_in_2009_2011_df, 
                             studies_between_2015_2016_df, 
                             studies_in_2019_df
                             ) %>% 
@@ -1128,15 +1164,18 @@ peak_period_df <- bind_rows(studies_in_2009_df,
 knitr::kable(peak_period_df , 
              caption = 'Studies published in peak period'
              )
+```
 
+```{r echo=FALSE}
 n_studies_by_disease_and_objectives_peak_periods <- peak_period_df %>% 
   count(disease, objectives) 
 
 knitr::kable(n_studies_by_disease_and_objectives_peak_periods, 
              caption = 'Number of studies per disease and objective in peak periods'
              )
+```
 
-
+```{r echo=FALSE}
 total_studies_by_disease_peak_period_df <- peak_period_df %>% 
   count(disease) %>% 
   arrange(n)
@@ -1144,19 +1183,21 @@ total_studies_by_disease_peak_period_df <- peak_period_df %>%
 knitr::kable(total_studies_by_disease_peak_period_df, 
              caption = 'Number of studies per disease in peak periods'
              )
+```
 
-
-#Influenza during 2009 and 2011 peaks
+## Influenza during 2009 - 2011 peaks
+```{r echo=FALSE}
 n_Influenza_studies_by_objectives_2009_2011 <- peak_period_df %>% 
-  filter(publication_year == 2009 | publication_year == 2011) %>% 
+  filter(publication_year >= 2009, publication_year <= 2011) %>%
   filter(disease == 'influenza') %>% 
   count(objectives) 
 
 knitr::kable(n_Influenza_studies_by_objectives_2009_2011, 
              caption = 'Number of Influenza studies per objective type (2009 & 2011)'
              )
-
-#Ebola in 2015-2016
+```
+## Ebola in 2015-2016
+```{r echo=FALSE}
 n_ebola_studies_by_objectives_2015_2016 <- studies_between_2015_2016_df %>% 
   filter(disease == 'ebola') %>% 
   count(objectives) 
@@ -1164,8 +1205,9 @@ n_ebola_studies_by_objectives_2015_2016 <- studies_between_2015_2016_df %>%
 knitr::kable(n_ebola_studies_by_objectives_2015_2016, 
              caption = 'Number of Ebola studies per objective type (2015-2016)'
              )
-
-#Studies that used both retrospective and prospective assessments
+```
+### Studies that used both retrospective and prospective assessments in peak periods
+```{r echo=FALSE}
 knitr::kable(peak_period_df %>% filter(objectives == 'both'), 
              caption = 'Studies with retrospective and prospective assessments'
              )
