@@ -592,7 +592,9 @@ plot(academic_collabs_trend)
 
 ```
 
-# B. How often are papers authored by locals?
+# B. How often are the authors geographically connected to the lcoation studied?
+
+## Human diseases
 ```{r}
 author_location_count_by_disease_wide <- compact_data_no_fmd %>%
   separate_rows(disease, sep = ' ') %>% 
@@ -611,6 +613,19 @@ author_location_count_by_disease_wide <- compact_data_no_fmd %>%
 knitr::kable(author_location_count_by_disease_wide)
 ```
 
+## FMD
+
+```{r}
+author_location_count_fmd_wide <- compact_data %>%
+  filter(disease == 'fmd') %>% 
+  mutate(author_in_country_studied = as_factor(author_in_country_studied), 
+         disease = as_factor(disease)
+         ) %>% 
+  count(author_in_country_studied) 
+
+
+knitr::kable(author_location_count_fmd_wide)
+```
 
 ```{r}
 author_location_count_by_disease_long <- author_location_count_by_disease_wide %>% 
