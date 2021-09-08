@@ -1,12 +1,12 @@
 ---
 title: "Supplementary files for Outbreak response models of vaccine-preventable diseases in humans (1970-2019)"
 author: "James Azam"
-date: "01/06/2021"
+date: 'September 08, 2021'
 output:
   word_document:
     keep_md: yes
+    reference_docx: word-style.docx
     toc: yes
-#  html_notebook
 ---
 
 
