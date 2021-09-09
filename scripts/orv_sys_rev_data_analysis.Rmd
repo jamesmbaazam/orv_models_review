@@ -101,7 +101,8 @@ compact_data <- compact_data %>%
   mutate(validation = str_replace_all(validation, 
                                       validation_str_replacements
                                       )
-         )
+         ) %>% 
+  mutate(model_structure = str_replace(model_structure, 'deterministic stochastic', 'both'))
   
 
 # The data with citations 
@@ -146,7 +147,9 @@ compact_data_with_citation_keys <- compact_data_with_citation_keys %>%
   mutate(validation = str_replace_all(validation, 
                                       validation_str_replacements
                                       )
-         )
+         ) %>% 
+  mutate(model_structure = str_replace(model_structure, 'deterministic stochastic', 'both'))
+  
 
 #Rearrange the columns
 compact_data_with_citation_keys <- compact_data_with_citation_keys %>% 
