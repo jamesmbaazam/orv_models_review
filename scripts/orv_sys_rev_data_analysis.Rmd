@@ -562,6 +562,24 @@ ggplot(data = model_parametrization_long) +
 
 ## Model structure and sensitivity analysis
 ```{r}
+mod_structure_vs_sensitivity_analysis <- compact_data_with_citation_keys_no_fmd %>% 
+  count(model_structure, 
+        sensitivity_analysis, 
+        sort = TRUE
+        ) %>% 
+  pivot_wider(names_from = sensitivity_analysis, values_from = n)
+
+knitr::kable(mod_structure_vs_sensitivity_analysis)
+
+```
+
+```{r}
+sensitivity_analysis <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(sensitivity_analysis, sort = TRUE) %>% 
+  pivot_wider(names_from = sensitivity_analysis, values_from = n)
+
+knitr::kable(sensitivity_analysis)
 
 ```
 
