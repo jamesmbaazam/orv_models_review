@@ -29,18 +29,19 @@ conflict_prefer('select', 'dplyr')
 conflict_prefer('kable', 'knitr')
 ```
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(dev = 'jpeg')
+knitr::opts_chunk$set(cache = TRUE)
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6)
+knitr::opts_chunk$set(message = FALSE)
 
 # Sets the working directory for subsequent chunks, but not this chunk
 #knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
 
-
-```{r echo=FALSE, include=FALSE}
+```{r}
 # Load the cleaned data 
 long_data <- read_rds('../data/final_data/cleaned_data/review_data_long_cleaned.rds')
 
