@@ -52,3 +52,5 @@ figs/
 *.docx
 
 scripts/orv_sys_rev_data_analysis.md
+
+*.jpeg
