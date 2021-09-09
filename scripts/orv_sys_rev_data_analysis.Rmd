@@ -32,7 +32,6 @@ conflict_prefer('kable', 'knitr')
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(dev = 'jpeg')
-knitr::opts_chunk$set(cache = TRUE)
 knitr::opts_chunk$set(fig.width = 8, fig.height = 6)
 knitr::opts_chunk$set(message = FALSE)
 
