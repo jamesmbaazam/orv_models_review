@@ -76,7 +76,34 @@ compact_data <- compact_data_init %>%
                                          'purely_academic', 
                                          'mixed')
                                  )
+         ) 
+
+
+#a vector of shorter replacements for the original parametrization descriptions
+parametrization_str_replacements <- c('values_from_literature' = 'literature', 
+                  'values_from_guess_and_expert_opion' = 'expert_opinion', 
+                  'values_fitted_to_ts' = 'fitted',
+                  ' ' = ' and ' #replace space with 'and' to make it more readable
+                  )
+
+#a vector of shorter replacements for the original validation descriptions
+validation_str_replacements <- c('compared_with_data' = 'data',
+                                 'compared_with_other_model_output' = 'another_model',
+                                 'model_not_validated' = 'none',
+                                 ' ' = ' and '
+                                 )
+
+#replace the original descriptions of parametrization and validation with shorter strings
+compact_data <- compact_data %>% 
+  mutate(parametrization = str_replace_all(parametrization, 
+                                           parametrization_str_replacements
+                                           )
+         ) %>% 
+  mutate(validation = str_replace_all(validation, 
+                                      validation_str_replacements
+                                      )
          )
+  
 
 # The data with citations 
 compact_data_with_citation_keys_init <- read_rds(normalizePath('../data/final_data/cleaned_data/compact_data_with_citation_keys_cleaned.rds')) 
@@ -109,6 +136,17 @@ compact_data_with_citation_keys <- compact_data_with_citation_keys_init %>%
                                          'purely_academic', 
                                          'mixed')
                                  )
+         )
+
+#replace the original descriptions of parametrization and validation with shorter strings
+compact_data_with_citation_keys <- compact_data_with_citation_keys %>% 
+  mutate(parametrization = str_replace_all(parametrization, 
+                                           parametrization_str_replacements
+                                           )
+         ) %>% 
+  mutate(validation = str_replace_all(validation, 
+                                      validation_str_replacements
+                                      )
          )
 
 #Rearrange the columns
