@@ -522,33 +522,52 @@ knitr::kable(vax_impact_conclusions,
 
 ## Model structure, parametrization, and validation methods
 
-```{r echo=FALSE}
-
-model_structure_and_calibration <- compact_data_no_fmd %>% 
+```{r}
+#wide data for table
+model_parametrization_wide <- compact_data_no_fmd %>% 
   group_by(collab_type) %>% 
-  count(parametrization)
+  count(parametrization, sort = TRUE) %>% 
+  pivot_wider(names_from = collab_type, values_from = n) %>% 
+  adorn_totals(where = c('row'))
 
-knitr::kable(model_structure_and_calibration)
+#table
+knitr::kable(model_parametrization_wide, caption = 'How model parameters are obtained')
+```
 
-ggplot(data = model_structure_and_calibration) +
-  geom_bar(aes(x = parametrization, 
-               y = n, 
+```{r}
+#long data for plotting
+model_parametrization_long <- compact_data_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(parametrization, sort = TRUE)
+
+#plotting
+ggplot(data = model_parametrization_long) +
+  geom_bar(aes(x = reorder(parametrization, n),
+               y = n,
                fill = collab_type
-               ), 
+               ),
            stat = 'identity',
-           position = 'dodge'
+           position = 'dodge',
+           width = 0.35
            ) +
+  labs(x = '**How parameters are obtained**',
+       y = '**Number of studies**'
+       ) +
+  md_theme_minimal(base_size = 12) +
   coord_flip()
 
 ```
 
 ## Model structure and sensitivity analysis
+```{r}
+
+```
 
 
 ## Use of data data use and data availability
 
 ## Code availability
-```{r echo=FALSE}
+```{r}
 
 code_availability <- compact_data_no_fmd %>% 
   group_by(collab_type) %>% 
