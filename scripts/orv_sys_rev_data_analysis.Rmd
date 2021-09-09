@@ -9,7 +9,7 @@ output:
     toc: yes
 ---
 
-```{r echo=FALSE, message=FALSE, include=FALSE}
+```{r echo=FALSE, include=FALSE}
 #' load packages
 library('tidyverse')
 library('readr')
@@ -171,7 +171,7 @@ compact_data_with_citation_keys_no_fmd <- compact_data_with_citation_keys %>%
 
 ## Publications per year
 
-```{r echo=FALSE, fig.width=8}
+```{r}
 
 publications_per_year <- compact_data_no_fmd %>% 
   count(publication_year) 
@@ -324,7 +324,7 @@ plot(collab_proportions_plot)
 
 
 
-```{r echo=FALSE, fig.width=8, fig.width=8}
+```{r}
 #' Count the number of each author affiliation type per year
 collabs_per_year <- compact_data_no_fmd %>% 
   count(year_aggreg, 
@@ -361,7 +361,7 @@ Even though non-academic collaborations increased over time, the share of total 
 
 ### Countries studied
 
-```{r echo=FALSE, warning=FALSE, message=FALSE}
+```{r}
 #Tally of how many times and percentage of times each COUNTRY has been studied
 countries_studied_by_count <- long_data_no_fmd %>% 
     group_by(country_studied) %>%
@@ -400,7 +400,7 @@ knitr::kable(countries_studied_by_count_aggregated,
 
 
 ### Continents studied
-```{r echo=FALSE, warning=FALSE, message=FALSE}
+```{r}
 continents_studied_by_count <- countries_studied_by_count %>% 
   mutate(continent_studied = countrycode(country_studied, 
                                           destination = 'continent',
@@ -435,7 +435,7 @@ knitr::kable(continents_studied_by_count,
 
 
 ### Connection of authors to the studied locations 
-```{r echo=FALSE, warning=FALSE, message=FALSE, fig.width=8, fig.height=6}
+```{r}
 author_location_count_by_disease <- compact_data_no_fmd %>%
   separate_rows(disease, sep = ' ') %>% 
   mutate(author_in_country_studied = as_factor(author_in_country_studied), 
@@ -481,7 +481,7 @@ print(author_location_count_by_disease_plot)
 
 ## Interventions
 ### Types of interventions
-```{r echo=FALSE}
+```{r}
 intervention_categories <- compact_data_no_fmd %>% 
   group_by(collab_type) %>% 
   count(intervention_type, sort = TRUE) %>% 
@@ -499,7 +499,7 @@ knitr::kable(intervention_categories,
 ```
 
 ### Impact of vaccination
-```{r echo=FALSE}
+```{r}
 vax_impact_conclusions <- compact_data_no_fmd %>% 
   filter(vax_modelled_with_non_vax == 'yes') %>% 
   count(collab_type, is_vax_effective, sort = T) %>% 
