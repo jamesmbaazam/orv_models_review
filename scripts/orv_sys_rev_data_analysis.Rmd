@@ -539,13 +539,67 @@ knitr::kable(vax_impact_conclusions,
 ```
 
 # Secondary objectives of review
+## Model structure 
+### Agent-based versus compartmental models
+```{r}
+individual_representation <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(individual_representation, sort = TRUE) %>% 
+  pivot_wider(names_from = individual_representation, values_from = n) %>% 
+  adorn_totals(where = c('col', 'row'))
 
-## Outcomes measured
+knitr::kable(individual_representation)
+```
+### Individual representation by model structure
+```{r}
+mod_structure_vs_individual_representation <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(model_structure, individual_representation, sort = TRUE) %>% 
+  pivot_wider(names_from = model_structure, values_from = n) %>% 
+  adorn_totals(where = c('col', 'row'))
 
-## Model structure, individual, and space representation"
+knitr::kable(mod_structure_vs_individual_representation, caption = 'Model structure versus individual heterogeneity')
+```
+
+### Spatial models
+```{r}
+space_representation <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(space_representation, sort = TRUE) %>% 
+  pivot_wider(names_from = space_representation, values_from = n) %>% 
+  adorn_totals(where = c('col', 'row'))
+
+knitr::kable(space_representation, caption = 'Spatial models')
+```
+
+### Spatial models by model structure
+```{r}
+mod_structure_vs_space_representation <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(model_structure, space_representation, sort = TRUE) %>% 
+  pivot_wider(names_from = model_structure, values_from = n) %>% 
+  adorn_totals(where = c('col', 'row'))
+
+knitr::kable(mod_structure_vs_space_representation, caption = 'Model structure versus spatial heterogeneity')
+```
+
+### Model dynamics: deterministic vs stochastic
+```{r}
+stochastic_vs_deterministic <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(model_structure) %>% 
+  pivot_wider(names_from = model_structure, values_from = n) %>% 
+  adorn_totals()
+
+knitr::kable(stochastic_vs_deterministic, caption = 'Model dynamics (deterministic versus stochastic)')
+```
 
 
-## Model structure, parametrization, and validation methods
+## Modelling methods
+
+### Outcomes measured
+
+### Parametrization and validation methods
 
 ```{r}
 #wide data for table
