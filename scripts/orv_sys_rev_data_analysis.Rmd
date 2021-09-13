@@ -22,6 +22,8 @@ library('stringr')
 library('countrycode')
 library('bib2df')
 library('conflicted')
+library('Hmisc')
+library('treemap')
 
 #resolve package function conflicts
 conflict_prefer('filter', 'dplyr')
