@@ -344,9 +344,10 @@ collab_proportions_plot <- ggplot(data = collap_types_by_year) +
                ),
            color = 'black',
            stat = 'identity',
-           position = position_fill(reverse = TRUE)  
+           position = position_fill(reverse = TRUE)#,
+           #show.legend = FALSE
              ) +
-  scale_fill_manual(values = c('tan1', 'turquoise1')) +
+  scale_fill_manual(values = c('tan3', 'turquoise2')) +
   scale_x_continuous(breaks = seq(2005, 2020, 2),
                      labels = x_axis_labels,
                      expand = c(0, 0)
@@ -357,7 +358,10 @@ collab_proportions_plot <- ggplot(data = collap_types_by_year) +
        y = '**Proportion of total publications**',
        fill = '**Collaboration type**' 
          ) +
+  theme(legend.position = 'none') +
+ # md_theme_minimal(base_size = 16) #For Powerpoint
   md_theme_minimal(base_size = 12)
+
 
 plot(collab_proportions_plot)
 
@@ -382,13 +386,18 @@ collabs_per_year_plot <- ggplot(data = collabs_per_year,
            stat = 'identity', 
            position = 'dodge'
            ) + 
-  scale_fill_manual(values = c('tan2', 'turquoise3')) + 
+  scale_fill_manual(values = c('tan3', 'turquoise2')) + 
+  scale_x_continuous(breaks = seq(2005, 2020, 2),
+                     labels = x_axis_labels,
+                     expand = c(0, 0)
+                     ) +
   labs(x = '**Year**', 
        y = '**Total publications**', 
        fill = 'Collaboration type'
        ) +
   md_theme_minimal(base_size = 12) +
-  theme(legend.position = 'top') 
+  #md_theme_minimal(base_size = 16) +
+  theme(legend.position = 'bottom') 
 
 plot(collabs_per_year_plot)
 
