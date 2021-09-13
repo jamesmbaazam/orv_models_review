@@ -580,24 +580,44 @@ model_parametrization_long <- compact_data_with_citation_keys_no_fmd %>%
   count(parametrization, sort = TRUE)
 
 #plotting
-ggplot(data = model_parametrization_long) +
-  geom_bar(aes(x = reorder(parametrization, n),
-               y = n,
-               fill = collab_type
-               ),
-           stat = 'identity',
-           position = 'dodge',
-           width = 0.35
-           ) +
-  labs(x = '**How parameters are obtained**',
-       y = '**Number of studies**'
-       ) +
-  md_theme_minimal(base_size = 12) +
-  coord_flip()
+# ggplot(data = model_parametrization_long) +
+#   geom_bar(aes(x = reorder(parametrization, n),
+#                y = n,
+#                fill = collab_type
+#                ),
+#            stat = 'identity',
+#            position = 'dodge',
+#            width = 0.35
+#            ) +
+#   labs(x = '**How parameters are obtained**',
+#        y = '**Number of studies**'
+#        ) +
+#   md_theme_minimal(base_size = 12) +
+#   coord_flip()
+
+treemap(model_parametrization_long, 
+        index = c('collab_type', 'parametrization'), 
+        vSize = 'n', 
+        type = 'index'
+        )
+
 
 ```
 
-## Model structure and sensitivity analysis
+```{r eval=FALSE}
+#wide data for table
+model_validation_wide <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(validation, sort = TRUE) %>% 
+  pivot_wider(names_from = collab_type, values_from = n) %>% 
+  adorn_totals(where = c('row'))
+
+#table
+knitr::kable(model_validation_wide, caption = 'How the model\'s performance is assessed')
+```
+
+
+### Sensitivity analysis
 ```{r}
 mod_structure_vs_sensitivity_analysis <- compact_data_with_citation_keys_no_fmd %>% 
   count(model_structure, 
