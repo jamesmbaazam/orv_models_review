@@ -517,8 +517,8 @@ intervention_categories <- compact_data_with_citation_keys_no_fmd %>%
 knitr::kable(intervention_categories, 
              col.names = c('Collaboration', 
                            'No vaccination', 
-                           'Vaccination alongside', 
-                           'Vaccination as intervention'
+                           'Vaccination (not compared)', 
+                           'Vaccination (compared)'
                            )
              )
 ```
