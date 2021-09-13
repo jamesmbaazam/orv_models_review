@@ -584,9 +584,23 @@ knitr::kable(sensitivity_analysis)
 ```
 
 
-## Use of data data use and data availability
+### Data use and data availability
+```{r}
+data_use_and_availability <- compact_data_with_citation_keys_no_fmd %>% 
+  filter(data_available != 'not_applicable') %>%
+  select(-data_used) %>% 
+  group_by(collab_type) %>% 
+  count(data_available, sort = TRUE) %>% 
+  pivot_wider(names_from = collab_type, values_from = n) %>% 
+  adorn_totals(where = c('row', 'col'))
 
-## Code availability
+knitr::kable(data_use_and_availability, 
+             caption = 'How often publicly available data is used for modelling outbreak response interventions')
+
+```
+
+
+### Code availability
 ```{r}
 
 code_availability <- compact_data_with_citation_keys_no_fmd %>% 
