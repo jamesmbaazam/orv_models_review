@@ -473,50 +473,34 @@ knitr::kable(continents_studied_by_count,
 
 
 
-### Connection of authors to the studied locations 
+### Geographic connection of authors to the studied locations 
 ```{r}
-author_location_count_by_disease <- compact_data_with_citation_keys_no_fmd %>%
-  separate_rows(disease, sep = ' ') %>% 
-  mutate(author_in_country_studied = as_factor(author_in_country_studied), 
-         disease = as_factor(disease)
-         ) %>% 
-  group_by(collab_type, disease) %>%
-  distinct(title, .keep_all = TRUE) %>% 
-  count(author_in_country_studied, sort = TRUE) %>% 
-  complete(author_in_country_studied, fill = list(n = 0)) %>% 
+author_connectedness_top_5_countries <- compact_data_with_citation_keys_no_fmd %>% 
+  filter(author_in_country_studied != 'not_applicable') %>% 
+  filter(country_studied %nin% c('other', 'none', 'northern_hemisphere', 'west_africa', 'global')) %>% 
+  group_by(collab_type) %>% 
+  count(country_studied, author_in_country_studied, sort = TRUE) %>% 
   pivot_wider(names_from = author_in_country_studied, values_from = n) %>% 
-  replace_na(list(yes = 0, no = 0, not_applicable = 0)) %>% 
-  mutate(total = not_applicable + no + yes) %>% 
-  ungroup(collab_type) %>% 
-  arrange(desc(total))
+  replace_na(list(yes = 0, no = 0)) %>% 
+  slice(n = 1:5) %>% 
+  adorn_totals(where = c('row', 'col')) %>% 
+  ungroup()
 
-author_location_count_by_disease_long <- author_location_count_by_disease %>% 
-  select(-c(not_applicable, total)) %>% 
-  pivot_longer(cols = c(yes, no), 
-               names_to = 'author_in_country_studied',
-               values_to = 'n'
-               )
-
-
-author_location_count_by_disease_plot <- ggplot(data = author_location_count_by_disease_long, 
-       aes(x = reorder(disease, n), 
-           y = n
-           )
-       ) + geom_bar(aes(fill = author_in_country_studied),
-                    stat = 'identity',
-                    position = position_fill(reverse = TRUE)
-                    ) +
-  labs(x = '**Disease**', 
-       y = '**Proportion of total studies**',
-       fill = 'At least one author in studied location'
-       ) +
-  md_theme_minimal(base_size = 12) +
-  theme(legend.position = 'top') +
-  facet_wrap(~ collab_type) +
-  coord_flip()
-
-print(author_location_count_by_disease_plot)
+knitr::kable(author_connectedness_top_5_countries)
 ```
+```{r}
+author_connectedness_to_location_aggreg <- compact_data_with_citation_keys_no_fmd %>% 
+  filter(author_in_country_studied != 'not_applicable') %>% 
+  filter(country_studied %nin% c('other', 'none', 'northern_hemisphere', 'west_africa', 'global')) %>% 
+  group_by(collab_type) %>% 
+  count(author_in_country_studied, sort = TRUE) %>% 
+  pivot_wider(names_from = author_in_country_studied, values_from = n) %>% 
+  replace_na(list(yes = 0, no = 0)) %>% 
+  adorn_totals(where = c('col'))
+
+knitr::kable(author_connectedness_to_location_aggreg)
+```
+
 
 ## Interventions
 ### Types of interventions
