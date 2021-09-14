@@ -263,7 +263,7 @@ plot(collab_proportions_plot)
 ```
 
 
-
+### Absolute number of publications per year by collaboration type
 ```{r}
 #' Count the number of each author affiliation type per year
 collabs_per_year <- compact_data_with_citation_keys_no_fmd %>% 
@@ -380,6 +380,8 @@ knitr::kable(continents_studied_by_count,
 
 
 ### Geographic connection of authors to the studied locations 
+
+#### Top 5 countries
 ```{r}
 author_connectedness_top_5_countries <- compact_data_with_citation_keys_no_fmd %>% 
   filter(author_in_country_studied != 'not_applicable') %>% 
@@ -394,6 +396,8 @@ author_connectedness_top_5_countries <- compact_data_with_citation_keys_no_fmd %
 
 knitr::kable(author_connectedness_top_5_countries)
 ```
+
+#### Aggregated
 ```{r}
 author_connectedness_to_location_aggreg <- compact_data_with_citation_keys_no_fmd %>% 
   filter(author_in_country_studied != 'not_applicable') %>% 
@@ -421,8 +425,8 @@ intervention_categories <- compact_data_with_citation_keys_no_fmd %>%
 knitr::kable(intervention_categories, 
              col.names = c('Collaboration', 
                            'No vaccination', 
-                           'Vaccination (not compared)', 
-                           'Vaccination (compared)'
+                           'Vaccination (mixed interventions)', 
+                           'Vaccination (single intervention)'
                            )
              )
 ```
@@ -478,7 +482,7 @@ knitr::kable(outbreak_types_by_collab_type,
 ## Modelling objectives and outbreak type by collaboration types
 ```{r echo=FALSE}
 objectives_and_outbreak_types <- compact_data_with_citation_keys_no_fmd %>% 
-  group_by(collab_type) %>% 
+ # group_by(collab_type) %>% 
   count(objectives, outbreak_type, name = 'num_of_studies', sort = TRUE) %>% 
   pivot_wider(names_from = objectives, 
               values_from = num_of_studies
@@ -619,7 +623,7 @@ model_parametrization_wide <- compact_data_with_citation_keys_no_fmd %>%
 knitr::kable(model_parametrization_wide, caption = 'How model parameters are obtained')
 ```
 
-```{r}
+```{r eval=FALSE}
 #long data for plotting
 model_parametrization_long <- compact_data_with_citation_keys_no_fmd %>% 
   group_by(collab_type) %>% 
@@ -652,7 +656,13 @@ model_validation_wide <- compact_data_with_citation_keys_no_fmd %>%
   group_by(collab_type) %>% 
   count(validation, sort = TRUE) %>% 
   pivot_wider(names_from = validation, values_from = n) %>% 
-  replace_na(list(none = 0, data = 0, another_model = 0, none_and_data = 0, data_and_another_model = 0, none)) %>% 
+  replace_na(list(none = 0, 
+                  data = 0, 
+                  another_model = 0, 
+                  none_and_data = 0, 
+                  data_and_another_model = 0
+                  )
+             ) %>% 
   adorn_totals(where = c('row'))
 
 #table
@@ -691,7 +701,7 @@ data_use_and_availability <- compact_data_with_citation_keys_no_fmd %>%
   select(-data_used) %>% 
   group_by(collab_type) %>% 
   count(data_available, sort = TRUE) %>% 
-  pivot_wider(names_from = collab_type, values_from = n) %>% 
+  pivot_wider(names_from = data_available, values_from = n) %>% 
   adorn_totals(where = c('row', 'col'))
 
 knitr::kable(data_use_and_availability, 
