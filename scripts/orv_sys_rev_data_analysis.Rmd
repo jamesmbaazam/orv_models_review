@@ -64,19 +64,6 @@ validation_str_replacements <- c('compared_with_data' = 'data',
                                  ' ' = '_and_'
                                  )
 
-#replace the original descriptions of parametrization and validation with shorter strings
-compact_data <- compact_data %>% 
-  mutate(parametrization = str_replace_all(parametrization, 
-                                           parametrization_str_replacements
-                                           )
-         ) %>% 
-  mutate(validation = str_replace_all(validation, 
-                                      validation_str_replacements
-                                      )
-         ) %>% 
-  mutate(model_structure = str_replace(model_structure, 'deterministic stochastic', 'both'))
-  
-
 # The data with citations 
 compact_data_with_citation_keys_init <- read_rds(normalizePath('../data/final_data/cleaned_data/compact_data_with_citation_keys_cleaned.rds')) 
 
@@ -134,10 +121,12 @@ compact_data_with_citation_keys <- compact_data_with_citation_keys %>%
 # Remove the FMD papers (NB: We only use the FMD papers for comparison)
 long_data_no_fmd <- long_data %>% filter(disease != 'fmd') 
 
-compact_data_no_fmd <- compact_data %>% filter(disease != 'fmd') 
-
 compact_data_with_citation_keys_no_fmd <- compact_data_with_citation_keys %>% 
   filter(disease != 'fmd') 
+
+#Filter the FMD data
+fmd_data <- compact_data_with_citation_keys %>% 
+  filter(disease == 'fmd') 
 ```
 
 
