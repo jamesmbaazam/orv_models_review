@@ -520,7 +520,7 @@ print(disease_by_collab_type_plot)
 ```
 
 ## Model characteristics 
-### Model structure: agent-based versus compartmental models
+### Individual heterogeneity: agent-based versus compartmental models
 ```{r}
 individual_representation <- compact_data_with_citation_keys_no_fmd %>% 
   group_by(collab_type) %>% 
@@ -541,13 +541,13 @@ knitr::kable(individual_representation)
 <!-- knitr::kable(mod_structure_vs_individual_representation, caption = 'Model structure versus individual heterogeneity') -->
 <!-- ``` -->
 
-### Spatial models
+### Spatial heterogeneity
 ```{r}
 space_representation <- compact_data_with_citation_keys_no_fmd %>% 
   group_by(collab_type) %>% 
   count(space_representation, sort = TRUE) %>% 
   pivot_wider(names_from = space_representation, values_from = n) %>% 
-  adorn_totals(where = c('col', 'row'))
+  adorn_totals(where = c('col'))
 
 knitr::kable(space_representation, caption = 'Spatial models')
 ```
