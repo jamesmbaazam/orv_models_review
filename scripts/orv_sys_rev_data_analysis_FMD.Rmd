@@ -324,7 +324,7 @@ knitr::kable(objectives_and_outbreak_types_fmd,
 
 ## Model characteristics 
 
-### Model structure: agent-based versus compartmental models
+### Individual heterogeneity: agent-based versus compartmental models
 ```{r}
 individual_representation_fmd <- fmd_data %>% 
   group_by(collab_type) %>% 
@@ -334,7 +334,7 @@ individual_representation_fmd <- fmd_data %>%
 
 knitr::kable(individual_representation_fmd)
 ```
-### Spatial models
+### Spatial heterogeneity
 ```{r}
 space_representation_fmd <- fmd_data %>% 
   group_by(collab_type) %>% 
