@@ -39,7 +39,7 @@ citation_data <- bib2df('./data/final_data/raw_data/included_studies.bib',
 #' because that is how KoboToolbox saves multiple answer questions
 review_data_compact_cleaning_step1 <- review_data_compact %>% 
     filter(publication_year < 2020) %>% #remove 2020 because the search was done in Jan 2020 so it gives the illusion that there were few papers in 2020.
-   # select(-'_index') %>% 
+    select(-'_index') %>% 
     clean_names() %>% 
     remove_empty('cols')
 
