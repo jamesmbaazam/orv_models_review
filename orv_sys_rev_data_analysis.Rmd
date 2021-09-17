@@ -1,0 +1,684 @@
+---
+title: "Primary analysis for Outbreak response models of vaccine-preventable diseases in humans (1970-2019)"
+author: "James Azam"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  word_document:
+    keep_md: yes
+    reference_docx: word-style.docx
+    toc: yes
+---
+
+```{r echo=FALSE, include=FALSE}
+#' load packages
+library('tidyverse')
+library('readr')
+library('ggthemes')
+library('mdthemes')
+library('scales')
+library('janitor')
+library('forcats')
+library('stringr')
+library('countrycode')
+library('bib2df')
+library('conflicted')
+library('Hmisc')
+library('treemapify')
+
+#resolve package function conflicts
+conflict_prefer('filter', 'dplyr')
+conflict_prefer('select', 'dplyr')
+conflict_prefer('kable', 'knitr')
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(dev = 'jpeg')
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6)
+knitr::opts_chunk$set(message = FALSE)
+
+# Sets the working directory for subsequent chunks, but not this chunk
+#knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+
+```{r}
+# Load the cleaned data 
+long_data <- read_rds('../data/final_data/cleaned_data/review_data_long_cleaned.rds')
+
+#The cleaned data without citations
+compact_data_init <- read_rds('../data/final_data/cleaned_data/review_data_compact_cleaned.rds')
+
+
+#a vector of shorter replacements for the original parametrization descriptions
+parametrization_str_replacements <- c('values_from_literature' = 'literature', 
+                  'values_from_guess_and_expert_opion' = 'expert_opinion', 
+                  'values_fitted_to_ts' = 'fitted',
+                  ' ' = ' and ' #replace space with 'and' to make it more readable
+                  )
+
+#a vector of shorter replacements for the original validation descriptions
+validation_str_replacements <- c('compared_with_data' = 'data',
+                                 'compared_with_other_model_output' = 'another_model',
+                                 'model_not_validated' = 'none',
+                                 ' ' = '_and_'
+                                 )
+
+# The data with citations 
+compact_data_with_citation_keys_init <- read_rds(normalizePath('../data/final_data/cleaned_data/compact_data_with_citation_keys_cleaned.rds')) 
+
+compact_data_with_citation_keys <- compact_data_with_citation_keys_init %>% 
+    mutate(vax_modelled = ifelse(str_detect(intervention_modelled, 'vaccination'), 
+                               'yes', 
+                               'no')
+         ) %>% 
+  mutate(intervention_type = case_when(
+    vax_modelled == 'no' & vax_modelled_with_non_vax == 'no' ~ 'no_vax', #Vaccination was not modelled
+    vax_modelled == 'yes' & vax_modelled_with_non_vax == 'no' ~ 'vax_alongside', #when vax was modelled but not for comparison as a single intervention
+    vax_modelled == 'yes' & vax_modelled_with_non_vax == 'yes' ~ 'vax_single', #when vax was modelled as a single intervention
+  )) %>% 
+  mutate(publication_year = as.numeric(publication_year), 
+         author_in_country_studied = as.character(author_in_country_studied)) %>% 
+  arrange(publication_year) %>%
+  mutate(
+    author_affiliation_type = str_replace_all(author_affiliation_type, ' ', ' + '),
+    author_in_country_studied = if_else(author_in_country_studied == 'NA', 'not_applicable',
+                                        author_in_country_studied
+                                        )
+    ) %>% 
+  mutate(year_aggreg = as.numeric(ifelse(publication_year < 2006, #An approach to aggregate the years before 2006 into one group because of the low number of papers
+                                         2005, 
+                                         publication_year
+                                         )
+                                  ), 
+         collab_type = as_factor(if_else(author_affiliation_type == 'academic_institutions', 
+                                         'purely_academic', 
+                                         'mixed')
+                                 )
+         )
+
+#replace the original descriptions of parametrization and validation with shorter strings
+compact_data_with_citation_keys <- compact_data_with_citation_keys %>% 
+  mutate(parametrization = str_replace_all(parametrization, 
+                                           parametrization_str_replacements
+                                           )
+         ) %>% 
+  mutate(validation = str_replace_all(validation, 
+                                      validation_str_replacements
+                                      )
+         ) %>% 
+  mutate(model_structure = str_replace(model_structure, 'deterministic stochastic', 'both'))
+  
+
+#Rearrange the columns
+compact_data_with_citation_keys <- compact_data_with_citation_keys %>% 
+  relocate(c(title, bibtexkey), .before = publication_year) %>% 
+  relocate(publication_year, .before = bibtexkey) %>% 
+  relocate(c(x0_reviewer, category, author:language), 
+           .after = collab_type
+           )
+
+# Remove the FMD papers (NB: We only use the FMD papers for comparison)
+long_data_no_fmd <- long_data %>% filter(disease != 'fmd') 
+
+compact_data_with_citation_keys_no_fmd <- compact_data_with_citation_keys %>% 
+  filter(disease != 'fmd') 
+
+#Filter the FMD data
+fmd_data <- compact_data_with_citation_keys %>% 
+  filter(disease == 'fmd') 
+```
+
+
+We did not include foot and mouth disease (FMD) in all the primary analyses. All analyses pertaining to FMD can be found in the supplementary files.  
+
+# Publications per year
+
+```{r}
+
+publications_per_year <- compact_data_with_citation_keys_no_fmd %>% 
+  count(publication_year) 
+
+publications_per_year_plot <- ggplot(data = publications_per_year) + 
+  geom_bar(aes(x = publication_year, 
+               y = n
+               ), 
+           stat = 'identity', 
+           color = 'black',
+           fill = 'tomato3'
+           ) +
+  scale_y_continuous(breaks = seq(0, 30, 2),
+                     labels = seq(0, 30, 2)
+                     ) +
+  labs(x = '**Year of publication**', y = '**Number of papers**') +
+  md_theme_minimal(base_size = 12)
+  
+
+plot(publications_per_year_plot)
+
+```
+
+# Primary objectives of review
+
+## Collaboration patterns in time
+
+### Number of studies per combinations of collaboration types
+
+```{r echo=FALSE}
+#' Count by collaboration types and make a bar plot
+collab_types_count <- compact_data_with_citation_keys_no_fmd %>%
+    count(author_affiliation_type, sort = TRUE) %>% 
+    mutate(author_affiliation_type = as_factor(author_affiliation_type))
+
+knitr::kable(collab_types_count %>% arrange(desc(n)))
+```
+
+### Proportions of the total publications per year by collaboration type
+
+```{r echo=FALSE, fig.width=8}
+#' Count the number of each author affiliation type per year (including FMD)
+collap_types_by_year <- compact_data_with_citation_keys_no_fmd %>% 
+  count(year_aggreg, 
+        collab_type, 
+        name = 'total_publications'
+        )
+
+
+#The plot
+# Modify the x-axis labels to account for the lumping of the years from 2005 and below
+x_axis_labels <- as.character(seq(2005, 2020, 2))
+
+x_axis_labels[1] <- '1970-2005'
+
+
+collab_proportions_plot <- ggplot(data = collap_types_by_year) + 
+  geom_bar(aes(x = year_aggreg,
+               y = total_publications,
+               fill = collab_type
+               ),
+           color = 'black',
+           stat = 'identity',
+           position = position_fill(reverse = TRUE)#,
+           #show.legend = FALSE
+             ) +
+  scale_fill_manual(values = c('tan3', 'turquoise2')) +
+  scale_x_continuous(breaks = seq(2005, 2020, 2),
+                     labels = x_axis_labels,
+                     expand = c(0, 0)
+                     ) +
+  #coord_flip() +
+  labs(#title = 'Publications per collaboration type over time',
+       x = '**Year**',
+       y = '**Proportion of total publications**',
+       fill = '**Collaboration type**' 
+         ) +
+  theme(legend.position = 'none') +
+ # md_theme_minimal(base_size = 16) #For Powerpoint
+  md_theme_minimal(base_size = 12)
+
+
+plot(collab_proportions_plot)
+
+```
+
+
+### Absolute number of publications per year by collaboration type
+```{r}
+#' Count the number of each author affiliation type per year
+collabs_per_year <- compact_data_with_citation_keys_no_fmd %>% 
+  count(year_aggreg, 
+        collab_type, 
+        name = 'total_publications'
+        ) 
+
+collabs_per_year_plot <- ggplot(data = collabs_per_year, 
+                                    aes(x = year_aggreg, 
+                                        y = total_publications
+                                        ), 
+                                    color = 'black') + 
+  geom_bar(aes(fill = collab_type), 
+           stat = 'identity', 
+           position = 'dodge'
+           ) + 
+  scale_fill_manual(values = c('tan3', 'turquoise2')) + 
+  scale_x_continuous(breaks = seq(2005, 2020, 2),
+                     labels = x_axis_labels,
+                     expand = c(0, 0)
+                     ) +
+  labs(x = '**Year**', 
+       y = '**Total publications**', 
+       fill = 'Collaboration type'
+       ) +
+  md_theme_minimal(base_size = 12) +
+  #md_theme_minimal(base_size = 16) +
+  theme(legend.position = 'bottom') 
+
+plot(collabs_per_year_plot)
+
+
+```
+
+Even though non-academic collaborations increased over time, the share of total publications per year over time decreased.
+
+
+## Collaboration patterns in geographic space
+
+### Countries studied
+
+```{r}
+#Tally of how many times and percentage of times each COUNTRY has been studied
+countries_studied_by_count <- long_data_no_fmd %>% 
+    group_by(country_studied) %>%
+    distinct(title) %>% 
+    count(country_studied, name = 'num_of_studies', sort = T) %>% 
+    ungroup(country_studied) %>% 
+    mutate(country_studied = as_factor(country_studied), 
+           percentage = round(num_of_studies/sum(num_of_studies)*100, 1)
+           )
+
+#'Modify the data frame to lump together all countries with less than some number of studies as 'other' and recalculate the percentage studied
+countries_studied_by_count_aggregated <- countries_studied_by_count %>% 
+  mutate(country_studied_aggreg = if_else(num_of_studies < 9, #from eye balling the raw counts
+                                          'other', 
+                                          as.character(country_studied)
+                                          )
+         ) %>% 
+  group_by(country_studied_aggreg) %>%
+  summarise(num_of_studies = sum(num_of_studies),
+            percentage = sum(percentage),
+            .groups = 'drop'
+            ) %>% 
+  arrange(desc(percentage)) %>% 
+  mutate(country_studied_aggreg = as_factor(country_studied_aggreg))
+
+#Print the results
+knitr::kable(countries_studied_by_count_aggregated, 
+             col.names = c('Country', 
+                           'Number of studies', 
+                           'Percentage'
+                           ),
+             caption = 'Number/percentage of studies per country'
+             )
+``` 
+
+
+
+### Continents studied
+```{r}
+continents_studied_by_count <- countries_studied_by_count %>% 
+  mutate(continent_studied = countrycode(country_studied, 
+                                          destination = 'continent',
+                                          origin = 'iso2c',
+                                          nomatch = NULL #if there is no match, keep the original
+                                          )
+         ) %>% 
+  mutate(continent_studied = str_to_lower(continent_studied)
+         ) %>% 
+  mutate(continent_studied = case_when(str_detect(continent_studied, 'asia') == T ~ 'asia', 
+                                         str_detect(continent_studied, 'africa') == T ~ 'africa', 
+                                         TRUE ~ continent_studied
+                                       )
+           ) %>% 
+  group_by(continent_studied) %>%
+  summarise(num_of_studies = sum(num_of_studies), 
+            percentage = sum(percentage),
+            .groups = 'drop'
+            ) %>% 
+  arrange(desc(percentage))
+
+#Print the results
+knitr::kable(continents_studied_by_count, 
+             col.names = c('Continent', 
+                           'Number of studies', 
+                           'Percentage'
+                           ),
+             caption = 'Number/percentage of studies per continent'
+             )
+``` 
+
+
+
+### Geographic connection of authors to the studied locations 
+
+#### Top 5 countries
+```{r}
+author_connectedness_top_5_countries <- compact_data_with_citation_keys_no_fmd %>% 
+  filter(author_in_country_studied != 'not_applicable') %>% 
+  filter(country_studied %nin% c('other', 'none', 'northern_hemisphere', 'west_africa', 'global')) %>% 
+  group_by(collab_type) %>% 
+  count(country_studied, author_in_country_studied, sort = TRUE) %>% 
+  pivot_wider(names_from = author_in_country_studied, values_from = n) %>% 
+  replace_na(list(yes = 0, no = 0)) %>% 
+  slice(n = 1:5) %>% 
+  adorn_totals(where = c('row', 'col')) %>% 
+  ungroup()
+
+knitr::kable(author_connectedness_top_5_countries)
+```
+
+#### Aggregated
+```{r}
+author_connectedness_to_location_aggreg <- compact_data_with_citation_keys_no_fmd %>% 
+  filter(author_in_country_studied != 'not_applicable') %>% 
+  filter(country_studied %nin% c('other', 'none', 'northern_hemisphere', 'west_africa', 'global')) %>% 
+  group_by(collab_type) %>% 
+  count(author_in_country_studied, sort = TRUE) %>% 
+  pivot_wider(names_from = author_in_country_studied, values_from = n) %>% 
+  replace_na(list(yes = 0, no = 0)) %>% 
+  adorn_totals(where = c('col'))
+
+knitr::kable(author_connectedness_to_location_aggreg)
+```
+
+
+## Interventions
+### Types of interventions
+```{r}
+intervention_categories <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(intervention_type, sort = TRUE) %>% 
+  pivot_wider(names_from = intervention_type, values_from = n) %>% 
+  adorn_totals(where = c('row'))
+
+
+knitr::kable(intervention_categories, 
+             col.names = c('Collaboration', 
+                           'No vaccination', 
+                           'Vaccination (mixed interventions)', 
+                           'Vaccination (single intervention)'
+                           )
+             )
+```
+
+### Impact of vaccination
+```{r}
+vax_impact_conclusions <- compact_data_with_citation_keys_no_fmd %>% 
+  filter(vax_modelled_with_non_vax == 'yes') %>% 
+  count(collab_type, is_vax_effective, sort = T) %>% 
+  pivot_wider(names_from = is_vax_effective, values_from = n) %>% 
+  rename('inconclusive' = 'the_outcomes_were_inconclusive') %>% 
+  adorn_totals()
+
+#Print the results
+knitr::kable(vax_impact_conclusions, 
+             caption = 'Conclusions about impact of vaccination'
+             )
+```
+
+# Secondary objectives of review
+## Modelling objectives
+
+```{r echo=FALSE}
+#count the number of studies per objective type
+modelling_objectives_count <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(objectives, name = 'num_of_studies') %>% 
+  pivot_wider(names_from = objectives, values_from = num_of_studies) %>% 
+  adorn_totals(where = c('col', 'row'))
+
+#Print a table of the results
+knitr::kable(modelling_objectives_count,
+             caption = 'Study objectives by collaboration type'
+             )
+```
+
+## Outbreak types
+```{r echo=FALSE}
+#Outbreak types per collab type
+outbreak_types_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(outbreak_type, name = 'num_of_studies') %>% 
+  pivot_wider(names_from = outbreak_type, values_from = num_of_studies) %>% 
+  adorn_totals(where = c('col', 'row'))
+
+#Print a table of the results
+knitr::kable(outbreak_types_by_collab_type,
+             caption = 'Study objectives by collaboration type'
+             )
+```
+
+
+## Modelling objectives and outbreak type by collaboration types
+```{r echo=FALSE}
+objectives_and_outbreak_types <- compact_data_with_citation_keys_no_fmd %>% 
+ # group_by(collab_type) %>% 
+  count(objectives, outbreak_type, name = 'num_of_studies', sort = TRUE) %>% 
+  pivot_wider(names_from = objectives, 
+              values_from = num_of_studies
+              ) %>% 
+  replace_na(list(future = 0, past = 0, both = 0)) %>% 
+  adorn_totals(where = c('col', 'row'))
+
+knitr::kable(objectives_and_outbreak_types, 
+             caption = 'Number of studies per objective and outbreak type'
+             ) 
+```
+
+## Diseases studied per collab type
+
+```{r echo=FALSE}
+#count the number of unique diseases studied
+disease_studied_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
+  separate_rows(disease,  sep = ' ') %>% 
+  group_by(disease) %>% 
+  distinct(title, .keep_all = TRUE) %>% 
+  count(disease, collab_type, sort = TRUE) %>%
+  pivot_wider(names_from = collab_type, values_from = n) %>% 
+  replace_na(list(purely_academic = 0, mixed = 0)) %>% 
+  mutate(total = purely_academic + mixed) %>% 
+  arrange(desc(total))
+
+knitr::kable(disease_studied_by_collab_type)
+```
+```{r}
+
+disease_by_collab_type_long <- compact_data_with_citation_keys_no_fmd %>% 
+  separate_rows(disease,  sep = ' ') %>% 
+  group_by(disease) %>% 
+  count(disease, collab_type, sort = TRUE) %>% 
+  ungroup()
+
+disease_by_collab_type_proportions <- disease_by_collab_type_long %>% 
+  group_by(disease) %>%
+  summarise(collab_type = collab_type, 
+            n = n,
+            prop = round(n/sum(n), 1)
+            )
+
+disease_by_collab_type_plot <- ggplot(disease_by_collab_type_long) + 
+  geom_bar(aes(x = disease, 
+               y = n, 
+               fill = collab_type
+               ), 
+           color = 'black',
+           stat = 'identity',
+           position = position_fill(reverse = TRUE)
+           ) + 
+  # geom_text(data = disease_by_collab_type_proportions, 
+  #           aes(x = disease, 
+  #               y = prop, 
+  #               label = n, 
+  #               ),
+  #           nudge_y = -0.05
+  #           ) +
+  labs(x = '**Disease**', y = '**Number of studies**') + 
+  coord_flip() +
+  md_theme_minimal(base_size = 12)
+
+print(disease_by_collab_type_plot)
+```
+
+## Model characteristics 
+### Individual heterogeneity: agent-based versus compartmental models
+```{r}
+individual_representation <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(individual_representation, sort = TRUE) %>% 
+  pivot_wider(names_from = individual_representation, values_from = n) %>% 
+  adorn_totals(where = c('col', 'row'))
+
+knitr::kable(individual_representation)
+```
+<!-- ### Individual representation by model structure -->
+<!-- ```{r} -->
+<!-- mod_structure_vs_individual_representation <- compact_data_with_citation_keys_no_fmd %>%  -->
+<!--   group_by(collab_type) %>%  -->
+<!--   count(model_structure, individual_representation, sort = TRUE) %>%  -->
+<!--   pivot_wider(names_from = model_structure, values_from = n) %>%  -->
+<!--   adorn_totals(where = c('col', 'row')) -->
+
+<!-- knitr::kable(mod_structure_vs_individual_representation, caption = 'Model structure versus individual heterogeneity') -->
+<!-- ``` -->
+
+### Spatial heterogeneity
+```{r}
+space_representation <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(space_representation, sort = TRUE) %>% 
+  pivot_wider(names_from = space_representation, values_from = n) %>% 
+  adorn_totals(where = c('col'))
+
+knitr::kable(space_representation, caption = 'Spatial models')
+```
+
+<!-- ### Spatial models by model structure -->
+<!-- ```{r} -->
+<!-- mod_structure_vs_space_representation <- compact_data_with_citation_keys_no_fmd %>%  -->
+<!--   group_by(collab_type) %>%  -->
+<!--   count(model_structure, space_representation, sort = TRUE) %>%  -->
+<!--   pivot_wider(names_from = model_structure, values_from = n) %>%  -->
+<!--   adorn_totals(where = c('col', 'row')) -->
+
+<!-- knitr::kable(mod_structure_vs_space_representation, caption = 'Model structure versus spatial heterogeneity') -->
+<!-- ``` -->
+
+### Model dynamics: deterministic vs stochastic
+```{r}
+stochastic_vs_deterministic <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(model_structure) %>% 
+  pivot_wider(names_from = model_structure, values_from = n) %>% 
+  adorn_totals()
+
+knitr::kable(stochastic_vs_deterministic, caption = 'Model dynamics (deterministic versus stochastic)')
+```
+
+
+## Modelling methods
+
+### Outcomes measured
+
+### Parametrization methods
+
+```{r}
+#wide data for table
+model_parametrization_wide <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(parametrization, sort = TRUE) %>% 
+  pivot_wider(names_from = collab_type, values_from = n) %>% 
+  adorn_totals(where = c('row'))
+
+#table
+knitr::kable(model_parametrization_wide, caption = 'How model parameters are obtained')
+```
+
+```{r eval=FALSE}
+#long data for plotting
+model_parametrization_long <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(parametrization, sort = TRUE)
+
+#plotting
+ggplot(data = model_parametrization_long, 
+       aes(fill = collab_type, 
+           area = n, 
+           label = parametrization,
+           subgroup = parametrization
+           )
+       ) + 
+  geom_treemap() +
+  geom_treemap_text(colour = "white",
+                    place = "centre",
+                    size = 15,
+                    grow = TRUE
+                    ) +
+  md_theme_minimal(base_size = 12) 
+
+
+```
+
+### Validation methods 
+
+```{r eval=FALSE}
+#wide data for table
+model_validation_wide <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(validation, sort = TRUE) %>% 
+  pivot_wider(names_from = validation, values_from = n) %>% 
+  replace_na(list(none = 0, 
+                  data = 0, 
+                  another_model = 0, 
+                  none_and_data = 0, 
+                  data_and_another_model = 0
+                  )
+             ) %>% 
+  adorn_totals(where = c('row'))
+
+#table
+knitr::kable(model_validation_wide, caption = 'How the model\'s performance is assessed')
+```
+
+
+### Sensitivity analysis
+```{r}
+mod_structure_vs_sensitivity_analysis <- compact_data_with_citation_keys_no_fmd %>% 
+  count(model_structure, 
+        sensitivity_analysis, 
+        sort = TRUE
+        ) %>% 
+  pivot_wider(names_from = sensitivity_analysis, values_from = n)
+
+knitr::kable(mod_structure_vs_sensitivity_analysis)
+
+```
+
+```{r}
+sensitivity_analysis <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(sensitivity_analysis, sort = TRUE) %>% 
+  pivot_wider(names_from = sensitivity_analysis, values_from = n)
+
+knitr::kable(sensitivity_analysis)
+
+```
+
+
+### Data use and data availability
+```{r}
+data_use_and_availability <- compact_data_with_citation_keys_no_fmd %>% 
+  filter(data_available != 'not_applicable') %>%
+  select(-data_used) %>% 
+  group_by(collab_type) %>% 
+  count(data_available, sort = TRUE) %>% 
+  pivot_wider(names_from = data_available, values_from = n) %>% 
+  adorn_totals(where = c('row', 'col'))
+
+knitr::kable(data_use_and_availability, 
+             caption = 'How often publicly available data is used for modelling outbreak response interventions')
+
+```
+
+
+### Code availability
+```{r}
+
+code_availability <- compact_data_with_citation_keys_no_fmd %>% 
+  group_by(collab_type) %>% 
+  count(simulation_code_available) %>% 
+  pivot_wider(names_from = simulation_code_available, values_from = n) %>% 
+  adorn_totals(where = c('row'))
+
+knitr::kable(code_availability)
+```
+
+
