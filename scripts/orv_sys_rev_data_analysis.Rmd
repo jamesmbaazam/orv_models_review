@@ -321,6 +321,7 @@ continent_studied_most <- continents_studied_by_count %>%
     dplyr::filter(continent_studied != 'none') %>% 
     filter(num_of_studies == max(num_of_studies))
 
+## FMD
 
 #Print the result as a table      
 knitr::kable(continent_studied_most,
