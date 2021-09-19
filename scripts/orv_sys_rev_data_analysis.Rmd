@@ -548,14 +548,18 @@ knitr::kable(objectives_and_outbreak_types,
 #count the number of unique diseases studied
 disease_studied_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
   separate_rows(disease,  sep = ' ') %>% 
-  group_by(disease) %>% 
-  distinct(title, .keep_all = TRUE) %>% 
-  count(disease, collab_type, sort = TRUE) %>%
+  distinct(title, disease, .keep_all = TRUE) %>% 
+  count(collab_type, disease, sort = TRUE) %>%
   pivot_wider(names_from = collab_type, values_from = n) %>% 
   replace_na(list(purely_academic = 0, mixed = 0)) %>% 
   mutate(total = purely_academic + mixed) %>% 
   arrange(desc(total)) %>% 
-  ungroup()
+    adorn_totals(where = c('row')) %>% 
+  adorn_percentages() %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns() %>% 
+  ungroup() %>% 
+  mutate(disease = str_to_sentence(str_replace(disease, '_', ' ')))
 
 knitr::kable(disease_studied_by_collab_type)
 ```
