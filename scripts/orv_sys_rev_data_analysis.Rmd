@@ -358,6 +358,7 @@ knitr::kable(countries_studied_by_count_aggregated,
 
 ```{r}
 continents_studied_by_count <- countries_studied_by_count %>% 
+  filter(country_studied %nin% c('none', 'northern_hemisphere', 'global')) %>% 
   mutate(continent_studied = countrycode(country_studied, 
                                           destination = 'continent',
                                           origin = 'iso2c',
