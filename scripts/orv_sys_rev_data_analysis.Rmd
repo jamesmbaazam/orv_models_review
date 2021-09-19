@@ -37,8 +37,17 @@ knitr::opts_chunk$set(dev = 'jpeg')
 knitr::opts_chunk$set(fig.width = 8, fig.height = 6)
 knitr::opts_chunk$set(message = FALSE)
 
-# Sets the working directory for subsequent chunks, but not this chunk
-#knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+#create a folder for storing the manuscript figures
+
+if(!dir.exists('../figs_manuscript'))
+    {
+    dir.create('../figs_manuscript', 
+               showWarnings = FALSE)
+    }
+
+#save figures in this folder
+save_fig_here <- '../figs_manuscript'
 ```
 
 
