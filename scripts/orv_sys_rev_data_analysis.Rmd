@@ -165,6 +165,12 @@ publications_per_year_plot <- ggplot(data = publications_per_year) +
 
 plot(publications_per_year_plot)
 
+ggsave(filename = 'publications_per_year.png', 
+       plot = publications_per_year_plot, 
+       device = 'png', 
+       path = save_fig_here
+       )
+
 ```
 
 # Primary objectives of review
@@ -228,6 +234,12 @@ collab_proportions_plot <- ggplot(data = collap_types_by_year) +
 
 plot(collab_proportions_plot)
 
+ggsave(filename = 'collab_proportions.png', 
+       plot = collab_proportions_plot, 
+       device = 'png', 
+       path = save_fig_here
+       )
+
 ```
 
 
@@ -265,6 +277,11 @@ collabs_per_year_plot <- ggplot(data = collabs_per_year,
 
 plot(collabs_per_year_plot)
 
+ggsave(filename = 'total_collabs_per_year_plot.png',
+       plot = collabs_per_year_plot, 
+       device = 'png',
+       path = save_fig_here
+       )
 
 ```
 
