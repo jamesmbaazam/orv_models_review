@@ -374,18 +374,17 @@ continents_studied_by_count <- countries_studied_by_count %>%
            ) %>% 
   group_by(continent_studied) %>%
   summarise(num_of_studies = sum(num_of_studies), 
-            percentage = sum(percentage),
             .groups = 'drop'
             ) %>% 
-  arrange(desc(percentage))
+  arrange(desc(num_of_studies)) %>% 
+  adorn_totals(where = c('row')) %>% 
+  adorn_percentages(denominator = 'col') %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns()
 
 #Print the results
 knitr::kable(continents_studied_by_count, 
-             col.names = c('Continent', 
-                           'Number of studies', 
-                           'Percentage'
-                           ),
-             caption = 'Number/percentage of studies per continent'
+             caption = 'Number of studies per continent'
              )
 ``` 
 
