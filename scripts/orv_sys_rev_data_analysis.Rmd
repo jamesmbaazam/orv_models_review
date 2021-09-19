@@ -422,7 +422,7 @@ author_connectedness_to_location_aggreg <- compact_data_with_citation_keys_no_fm
   count(author_in_country_studied, sort = TRUE) %>% 
   pivot_wider(names_from = author_in_country_studied, values_from = n) %>% 
   replace_na(list(yes = 0, no = 0)) %>% 
-  adorn_totals(where = c('row')) %>% 
+  adorn_totals(where = c('row', 'col')) %>% 
   adorn_percentages() %>% 
   adorn_pct_formatting() %>% 
   adorn_ns() %>% 
