@@ -411,31 +411,41 @@ print(paste('Number of studies between 2006 and 2019:', n_studies_btwn_2006_2019
 
 ### Countries studied
 
-```{r echo=FALSE, warning=FALSE, message=FALSE}
+```{r}
 #Tally of how many times and percentage of times each COUNTRY has been studied
-countries_studied_by_count <- long_data_no_fmd %>% 
-    group_by(country_studied) %>%
-    distinct(title) %>% 
-    count(country_studied, name = 'num_of_studies', sort = T) %>% 
-    ungroup(country_studied) %>% 
-    mutate(country_studied = as_factor(country_studied), 
-           percentage = round(num_of_studies/sum(num_of_studies)*100, 1)
-           )
+# countries_studied_by_count <- long_data_no_fmd %>% 
+#     group_by(country_studied) %>%
+#     distinct(title) %>% 
+#     count(country_studied, name = 'num_of_studies', sort = T) %>% 
+#     ungroup(country_studied) %>% 
+#     mutate(country_studied = as_factor(country_studied), 
+#            percentage = round(num_of_studies/sum(num_of_studies)*100, 1)
+#            )
+
+countries_studied_by_count <- compact_data_with_citation_keys_no_fmd %>% 
+    separate_rows(country_studied, sep = ' ') %>%
+    distinct(title, country_studied, .keep_all = TRUE) %>% 
+    count(collab_type, country_studied, name = 'num_of_studies', sort = T) 
 
 #'Modify the data frame to lump together all countries with less than some number of studies as 'other' and recalculate the percentage studied
 countries_studied_by_count_aggregated <- countries_studied_by_count %>% 
-  mutate(country_studied_aggreg = if_else(num_of_studies < 9, #from eye balling the raw counts
-                                          'other', 
-                                          as.character(country_studied)
-                                          )
-         ) %>% 
-  group_by(country_studied_aggreg) %>%
+  group_by(country_studied) %>%
   summarise(num_of_studies = sum(num_of_studies),
-            percentage = sum(percentage),
             .groups = 'drop'
             ) %>% 
-  arrange(desc(percentage)) %>% 
-  mutate(country_studied_aggreg = as_factor(country_studied_aggreg))
+  filter(country_studied %nin% c('none', 'west_africa', 'global', 'northern_hemisphere', 'southeast_asia', 'who_southeast_asia_region')) %>% 
+  arrange(desc(num_of_studies)) %>% 
+  adorn_totals(where = c('row')) %>% 
+  adorn_percentages(denominator = 'col') %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns() %>% 
+  ungroup() 
+
+
+#Print the results
+knitr::kable(countries_studied_by_count_aggregated, 
+             caption = 'Number of studies per country'
+             )
 ``` 
 
 
