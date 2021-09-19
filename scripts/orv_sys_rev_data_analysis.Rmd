@@ -290,6 +290,41 @@ Even though non-academic collaborations increased over time, the share of total 
 
 ## Collaboration patterns in geographic space
 
+### Real versus hypothetical locations
+
+```{r}
+location_types_tally <- compact_data_with_citation_keys_no_fmd %>% 
+    separate_rows(country_studied, sep = ' ') %>%
+    distinct(title, country_studied, .keep_all = TRUE) %>%
+    mutate(location_type = ifelse(country_studied == 'none', 'none', 'real')) %>% 
+    count(location_type) %>% 
+   adorn_totals(where = c('row')) %>% 
+  adorn_percentages(denominator = 'col') %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns()
+
+knitr::kable(location_types_tally)
+  
+```
+
+### Larger than one country
+
+```{r}
+larger_geographies_tally <- compact_data_with_citation_keys_no_fmd %>% 
+    separate_rows(country_studied, sep = ' ') %>%
+    distinct(title, country_studied, .keep_all = TRUE) %>%
+    filter(country_studied %in% c('west_africa', 'global', 'northern_hemisphere', 'southeast_asia', 'who_southeast_asia_region')) %>% 
+    count(country_studied) %>% 
+   adorn_totals(where = c('row')) %>% 
+  adorn_percentages(denominator = 'col') %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns()
+
+knitr::kable(larger_geographies_tally)
+  
+```
+
+
 ### Countries studied
 
 ```{r}
