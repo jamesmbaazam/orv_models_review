@@ -431,6 +431,51 @@ author_connectedness_to_location_aggreg <- compact_data_with_citation_keys_no_fm
 knitr::kable(author_connectedness_to_location_aggreg)
 ```
 
+## Diseases studied per collab type
+
+```{r echo=FALSE}
+#count the number of unique diseases studied
+disease_studied_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
+  separate_rows(disease,  sep = ' ') %>% 
+  distinct(title, disease, .keep_all = TRUE) %>% 
+  count(collab_type, disease, sort = TRUE) %>%
+  pivot_wider(names_from = collab_type, values_from = n) %>% 
+  replace_na(list(purely_academic = 0, mixed = 0)) %>% 
+  mutate(total = purely_academic + mixed) %>% 
+  arrange(desc(total)) %>% 
+    adorn_totals(where = c('row')) %>% 
+  adorn_percentages() %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns() %>% 
+  ungroup() %>% 
+  mutate(disease = str_to_sentence(str_replace(disease, '_', ' ')))
+
+knitr::kable(disease_studied_by_collab_type)
+```
+
+
+```{r}
+#tally the diseases by collaboration type
+disease_by_collab_type_long <- compact_data_with_citation_keys_no_fmd %>% 
+  separate_rows(disease,  sep = ' ') %>% 
+  count(collab_type, disease, sort = TRUE) 
+
+
+disease_by_collab_type_plot <- ggplot(disease_by_collab_type_long) + 
+  geom_bar(aes(x = reorder(disease, n), 
+               y = n, 
+               fill = collab_type
+               ), 
+           color = 'black',
+           stat = 'identity',
+           position = position_fill(reverse = TRUE)
+           ) + 
+  labs(x = '**Disease**', y = '**Number of studies**') + 
+  coord_flip() +
+  md_theme_minimal(base_size = 12)
+
+print(disease_by_collab_type_plot)
+```
 
 ## Interventions
 
@@ -541,64 +586,6 @@ knitr::kable(objectives_and_outbreak_types,
              ) 
 ```
 
-## Diseases studied per collab type
-
-```{r echo=FALSE}
-#count the number of unique diseases studied
-disease_studied_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
-  separate_rows(disease,  sep = ' ') %>% 
-  distinct(title, disease, .keep_all = TRUE) %>% 
-  count(collab_type, disease, sort = TRUE) %>%
-  pivot_wider(names_from = collab_type, values_from = n) %>% 
-  replace_na(list(purely_academic = 0, mixed = 0)) %>% 
-  mutate(total = purely_academic + mixed) %>% 
-  arrange(desc(total)) %>% 
-    adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup() %>% 
-  mutate(disease = str_to_sentence(str_replace(disease, '_', ' ')))
-
-knitr::kable(disease_studied_by_collab_type)
-```
-```{r}
-
-disease_by_collab_type_long <- compact_data_with_citation_keys_no_fmd %>% 
-  separate_rows(disease,  sep = ' ') %>% 
-  group_by(disease) %>% 
-  count(disease, collab_type, sort = TRUE) %>% 
-  ungroup()
-
-disease_by_collab_type_proportions <- disease_by_collab_type_long %>% 
-  group_by(disease) %>%
-  summarise(collab_type = collab_type, 
-            n = n,
-            prop = round(n/sum(n), 1)
-            )
-
-disease_by_collab_type_plot <- ggplot(disease_by_collab_type_long) + 
-  geom_bar(aes(x = disease, 
-               y = n, 
-               fill = collab_type
-               ), 
-           color = 'black',
-           stat = 'identity',
-           position = position_fill(reverse = TRUE)
-           ) + 
-  # geom_text(data = disease_by_collab_type_proportions, 
-  #           aes(x = disease, 
-  #               y = prop, 
-  #               label = n, 
-  #               ),
-  #           nudge_y = -0.05
-  #           ) +
-  labs(x = '**Disease**', y = '**Number of studies**') + 
-  coord_flip() +
-  md_theme_minimal(base_size = 12)
-
-print(disease_by_collab_type_plot)
-```
 
 ## Model characteristics 
 
