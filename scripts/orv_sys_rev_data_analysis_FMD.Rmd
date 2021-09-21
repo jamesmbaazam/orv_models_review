@@ -1,5 +1,5 @@
 ---
-title: "Primary analysis for Outbreak response models of foot and mouth disease (1970-2019)"
+title: "Outbreak response models of foot and mouth disease (1970-2019) - A primary analysis"
 author: "James Azam"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 output:

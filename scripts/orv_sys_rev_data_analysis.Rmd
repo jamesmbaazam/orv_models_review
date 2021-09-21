@@ -1,5 +1,5 @@
 ---
-title: "Primary analysis for Outbreak response models of vaccine-preventable diseases in humans (1970-2019)"
+title: "Outbreak response models of vaccine-preventable diseases in humans (1970-2019) - A systematic review (Primary Analysis)"
 author: "James Azam"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 output:
@@ -37,8 +37,17 @@ knitr::opts_chunk$set(dev = 'jpeg')
 knitr::opts_chunk$set(fig.width = 8, fig.height = 6)
 knitr::opts_chunk$set(message = FALSE)
 
-# Sets the working directory for subsequent chunks, but not this chunk
-#knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+#create a folder for storing the manuscript figures
+
+if(!dir.exists('../figs_manuscript'))
+    {
+    dir.create('../figs_manuscript', 
+               showWarnings = FALSE)
+    }
+
+#save figures in this folder
+save_fig_here <- '../figs_manuscript'
 ```
 
 
@@ -156,6 +165,12 @@ publications_per_year_plot <- ggplot(data = publications_per_year) +
 
 plot(publications_per_year_plot)
 
+ggsave(filename = 'publications_per_year.png', 
+       plot = publications_per_year_plot, 
+       device = 'png', 
+       path = save_fig_here
+       )
+
 ```
 
 # Primary objectives of review
@@ -168,9 +183,13 @@ plot(publications_per_year_plot)
 #' Count by collaboration types and make a bar plot
 collab_types_count <- compact_data_with_citation_keys_no_fmd %>%
     count(author_affiliation_type, sort = TRUE) %>% 
-    mutate(author_affiliation_type = as_factor(author_affiliation_type))
+    arrange(desc(n)) %>% 
+    adorn_totals() %>% 
+    adorn_percentages(denominator = 'col') %>% 
+    adorn_pct_formatting() %>% 
+    adorn_ns()
 
-knitr::kable(collab_types_count %>% arrange(desc(n)))
+knitr::kable(collab_types_count )
 ```
 
 ### Proportions of the total publications per year by collaboration type
@@ -219,6 +238,12 @@ collab_proportions_plot <- ggplot(data = collap_types_by_year) +
 
 plot(collab_proportions_plot)
 
+ggsave(filename = 'collab_proportions.png', 
+       plot = collab_proportions_plot, 
+       device = 'png', 
+       path = save_fig_here
+       )
+
 ```
 
 
@@ -256,6 +281,11 @@ collabs_per_year_plot <- ggplot(data = collabs_per_year,
 
 plot(collabs_per_year_plot)
 
+ggsave(filename = 'total_collabs_per_year_plot.png',
+       plot = collabs_per_year_plot, 
+       device = 'png',
+       path = save_fig_here
+       )
 
 ```
 
@@ -264,50 +294,77 @@ Even though non-academic collaborations increased over time, the share of total 
 
 ## Collaboration patterns in geographic space
 
+### Real versus hypothetical locations
+
+```{r}
+location_types_tally <- compact_data_with_citation_keys_no_fmd %>% 
+    separate_rows(country_studied, sep = ' ') %>%
+    distinct(title, country_studied, .keep_all = TRUE) %>%
+    mutate(location_type = ifelse(country_studied == 'none', 'none', 'real')) %>% 
+    count(location_type) %>% 
+  arrange(desc(n)) %>% 
+   adorn_totals(where = c('row')) %>% 
+  adorn_percentages(denominator = 'col') %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns()
+
+knitr::kable(location_types_tally)
+  
+```
+
+### Larger than one country
+
+```{r}
+larger_geographies_tally <- compact_data_with_citation_keys_no_fmd %>% 
+    separate_rows(country_studied, sep = ' ') %>%
+    distinct(title, country_studied, .keep_all = TRUE) %>%
+    filter(country_studied %in% c('west_africa', 'global', 'northern_hemisphere', 'southeast_asia', 'who_southeast_asia_region')) %>% 
+    count(country_studied) %>% 
+  arrange(desc(n)) %>% 
+   adorn_totals(where = c('row')) %>% 
+  adorn_percentages(denominator = 'col') %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns()
+
+knitr::kable(larger_geographies_tally)
+  
+```
+
+
 ### Countries studied
 
 ```{r}
-#Tally of how many times and percentage of times each COUNTRY has been studied
-countries_studied_by_count <- long_data_no_fmd %>% 
-    group_by(country_studied) %>%
-    distinct(title) %>% 
-    count(country_studied, name = 'num_of_studies', sort = T) %>% 
-    ungroup(country_studied) %>% 
-    mutate(country_studied = as_factor(country_studied), 
-           percentage = round(num_of_studies/sum(num_of_studies)*100, 1)
-           )
+countries_studied_by_count <- compact_data_with_citation_keys_no_fmd %>% 
+    separate_rows(country_studied, sep = ' ') %>%
+    distinct(title, country_studied, .keep_all = TRUE) %>% 
+    count(collab_type, country_studied, name = 'num_of_studies', sort = T) 
 
 #'Modify the data frame to lump together all countries with less than some number of studies as 'other' and recalculate the percentage studied
 countries_studied_by_count_aggregated <- countries_studied_by_count %>% 
-  mutate(country_studied_aggreg = if_else(num_of_studies < 9, #from eye balling the raw counts
-                                          'other', 
-                                          as.character(country_studied)
-                                          )
-         ) %>% 
-  group_by(country_studied_aggreg) %>%
+  group_by(country_studied) %>%
   summarise(num_of_studies = sum(num_of_studies),
-            percentage = sum(percentage),
             .groups = 'drop'
             ) %>% 
-  arrange(desc(percentage)) %>% 
-  mutate(country_studied_aggreg = as_factor(country_studied_aggreg))
+  filter(country_studied %nin% c('none', 'west_africa', 'global', 'northern_hemisphere', 'southeast_asia', 'who_southeast_asia_region')) %>% 
+  arrange(desc(num_of_studies)) %>% 
+  adorn_totals(where = c('row')) %>% 
+  adorn_percentages(denominator = 'col') %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns() %>% 
+  ungroup() %>% 
+  slice(1:6)
+
 
 #Print the results
 knitr::kable(countries_studied_by_count_aggregated, 
-             col.names = c('Country', 
-                           'Number of studies', 
-                           'Percentage'
-                           ),
-             caption = 'Number/percentage of studies per country'
+             caption = 'Number of studies per country'
              )
 ``` 
-
-
-
 ### Continents studied
 
 ```{r}
 continents_studied_by_count <- countries_studied_by_count %>% 
+  filter(country_studied %nin% c('none', 'northern_hemisphere', 'global')) %>% 
   mutate(continent_studied = countrycode(country_studied, 
                                           destination = 'continent',
                                           origin = 'iso2c',
@@ -323,18 +380,17 @@ continents_studied_by_count <- countries_studied_by_count %>%
            ) %>% 
   group_by(continent_studied) %>%
   summarise(num_of_studies = sum(num_of_studies), 
-            percentage = sum(percentage),
             .groups = 'drop'
             ) %>% 
-  arrange(desc(percentage))
+  arrange(desc(num_of_studies)) %>% 
+  adorn_totals(where = c('row')) %>% 
+  adorn_percentages(denominator = 'col') %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns()
 
 #Print the results
 knitr::kable(continents_studied_by_count, 
-             col.names = c('Continent', 
-                           'Number of studies', 
-                           'Percentage'
-                           ),
-             caption = 'Number/percentage of studies per continent'
+             caption = 'Number of studies per continent'
              )
 ``` 
 
@@ -347,16 +403,16 @@ knitr::kable(continents_studied_by_count,
 ```{r}
 author_connectedness_top_5_countries <- compact_data_with_citation_keys_no_fmd %>% 
   filter(author_in_country_studied != 'not_applicable') %>% 
-  filter(country_studied %nin% c('other', 'none', 'northern_hemisphere', 'west_africa', 'global')) %>% 
+  filter(country_studied %nin% c('none', 'west_africa', 'global', 'northern_hemisphere', 'southeast_asia', 'who_southeast_asia_region')) %>% 
   group_by(collab_type) %>% 
   count(country_studied, author_in_country_studied, sort = TRUE) %>% 
   pivot_wider(names_from = author_in_country_studied, values_from = n) %>% 
   replace_na(list(yes = 0, no = 0)) %>% 
   slice(n = 1:5) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('yes', 'no')) %>% 
+  adorn_pct_formatting(... = c('yes', 'no')) %>% 
+  adorn_ns(... = c('yes', 'no')) %>% 
   ungroup()
 
 knitr::kable(author_connectedness_top_5_countries)
@@ -368,19 +424,60 @@ knitr::kable(author_connectedness_top_5_countries)
 author_connectedness_to_location_aggreg <- compact_data_with_citation_keys_no_fmd %>% 
   filter(author_in_country_studied != 'not_applicable') %>% 
   filter(country_studied %nin% c('other', 'none', 'northern_hemisphere', 'west_africa', 'global')) %>% 
-  group_by(collab_type) %>% 
-  count(author_in_country_studied, sort = TRUE) %>% 
+  count(collab_type, author_in_country_studied, sort = TRUE) %>% 
   pivot_wider(names_from = author_in_country_studied, values_from = n) %>% 
   replace_na(list(yes = 0, no = 0)) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('yes', 'no')) %>% 
+  adorn_pct_formatting(... = c('yes', 'no')) %>% 
+  adorn_ns(... = c('yes', 'no')) 
 
 knitr::kable(author_connectedness_to_location_aggreg)
 ```
 
+## Diseases studied per collab type
+
+```{r echo=FALSE}
+#count the number of unique diseases studied
+disease_studied_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
+  separate_rows(disease,  sep = ' ') %>% 
+  distinct(title, disease, .keep_all = TRUE) %>% 
+  count(collab_type, disease, sort = TRUE) %>%
+  pivot_wider(names_from = collab_type, values_from = n) %>% 
+  replace_na(list(purely_academic = 0, mixed = 0)) %>% 
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('purely_academic', 'mixed')) %>% 
+  adorn_pct_formatting(... = c('purely_academic', 'mixed')) %>% 
+  adorn_ns(... = c('purely_academic', 'mixed')) %>% 
+  mutate(disease = str_to_sentence(str_replace(disease, '_', ' '))) %>% 
+  arrange(desc(Total))
+
+knitr::kable(disease_studied_by_collab_type, caption = 'Number of studies per disease and collaboration type')
+```
+
+
+```{r}
+#tally the diseases by collaboration type
+disease_by_collab_type_long <- compact_data_with_citation_keys_no_fmd %>% 
+  separate_rows(disease,  sep = ' ') %>% 
+  count(collab_type, disease, sort = TRUE) 
+
+
+disease_by_collab_type_plot <- ggplot(disease_by_collab_type_long) + 
+  geom_bar(aes(x = reorder(disease, n), 
+               y = n, 
+               fill = collab_type
+               ), 
+           color = 'black',
+           stat = 'identity',
+           position = position_fill(reverse = TRUE)
+           ) + 
+  labs(x = '**Disease**', y = '**Number of studies**') + 
+  coord_flip() +
+  md_theme_minimal(base_size = 12)
+
+print(disease_by_collab_type_plot)
+```
 
 ## Interventions
 
@@ -388,23 +485,15 @@ knitr::kable(author_connectedness_to_location_aggreg)
 
 ```{r}
 intervention_categories <- compact_data_with_citation_keys_no_fmd %>% 
-  group_by(collab_type) %>% 
-  count(intervention_type, sort = TRUE) %>% 
+  count(collab_type, intervention_type, sort = TRUE) %>% 
   pivot_wider(names_from = intervention_type, values_from = n) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('no_vax', 'vax_alongside', 'vax_single')) %>% 
+  adorn_pct_formatting(... = c('no_vax', 'vax_alongside', 'vax_single')) %>% 
+  adorn_ns(... = c('no_vax', 'vax_alongside', 'vax_single')) 
 
 
-knitr::kable(intervention_categories, 
-             col.names = c('Collaboration', 
-                           'No vaccination', 
-                           'Vaccination (mixed interventions)', 
-                           'Vaccination (single intervention)'
-                           )
-             )
+knitr::kable(intervention_categories, caption = 'Number of studies per intervention categories')
 ```
 
 ### Impact of vaccination
@@ -415,11 +504,10 @@ vax_impact_conclusions <- compact_data_with_citation_keys_no_fmd %>%
   count(collab_type, is_vax_effective, sort = T) %>% 
   pivot_wider(names_from = is_vax_effective, values_from = n) %>% 
   rename('inconclusive' = 'the_outcomes_were_inconclusive') %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('yes', 'no', 'inconclusive')) %>% 
+  adorn_pct_formatting(... = c('yes', 'no', 'inconclusive')) %>% 
+  adorn_ns(... = c('yes', 'no', 'inconclusive')) 
 
 #Print the results
 knitr::kable(vax_impact_conclusions, 
@@ -434,14 +522,12 @@ knitr::kable(vax_impact_conclusions,
 ```{r echo=FALSE}
 #count the number of studies per objective type
 modelling_objectives_count <- compact_data_with_citation_keys_no_fmd %>% 
-  group_by(collab_type) %>% 
-  count(objectives, name = 'num_of_studies') %>% 
+  count(collab_type, objectives, name = 'num_of_studies') %>% 
   pivot_wider(names_from = objectives, values_from = num_of_studies) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('both', 'future', 'past')) %>% 
+  adorn_pct_formatting(... = c('both', 'future', 'past')) %>% 
+  adorn_ns(... = c('both', 'future', 'past'))
 
 #Print a table of the results
 knitr::kable(modelling_objectives_count,
@@ -454,18 +540,16 @@ knitr::kable(modelling_objectives_count,
 ```{r echo=FALSE}
 #Outbreak types per collab type
 outbreak_types_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
-  group_by(collab_type) %>% 
-  count(outbreak_type, name = 'num_of_studies') %>% 
+  count(collab_type, outbreak_type, name = 'num_of_studies') %>% 
   pivot_wider(names_from = outbreak_type, values_from = num_of_studies) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('hypothetical_outbreak', 'real_outbreak')) %>% 
+  adorn_pct_formatting(... = c('hypothetical_outbreak', 'real_outbreak')) %>% 
+  adorn_ns(... = c('hypothetical_outbreak', 'real_outbreak'))
 
 #Print a table of the results
 knitr::kable(outbreak_types_by_collab_type,
-             caption = 'Study objectives by collaboration type'
+             caption = 'outbreak types by collaboration type'
              )
 ```
 
@@ -474,77 +558,21 @@ knitr::kable(outbreak_types_by_collab_type,
 
 ```{r echo=FALSE}
 objectives_and_outbreak_types <- compact_data_with_citation_keys_no_fmd %>% 
- # group_by(collab_type) %>% 
   count(objectives, outbreak_type, name = 'num_of_studies', sort = TRUE) %>% 
   pivot_wider(names_from = objectives, 
               values_from = num_of_studies
               ) %>% 
   replace_na(list(future = 0, past = 0, both = 0)) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('future', 'past', 'both')) %>% 
+  adorn_pct_formatting(... = c('future', 'past', 'both')) %>% 
+  adorn_ns(... = c('future', 'past', 'both')) 
 
 knitr::kable(objectives_and_outbreak_types, 
              caption = 'Number of studies per objective and outbreak type'
              ) 
 ```
 
-## Diseases studied per collab type
-
-```{r echo=FALSE}
-#count the number of unique diseases studied
-disease_studied_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
-  separate_rows(disease,  sep = ' ') %>% 
-  group_by(disease) %>% 
-  distinct(title, .keep_all = TRUE) %>% 
-  count(disease, collab_type, sort = TRUE) %>%
-  pivot_wider(names_from = collab_type, values_from = n) %>% 
-  replace_na(list(purely_academic = 0, mixed = 0)) %>% 
-  mutate(total = purely_academic + mixed) %>% 
-  arrange(desc(total)) %>% 
-  ungroup()
-
-knitr::kable(disease_studied_by_collab_type)
-```
-```{r}
-
-disease_by_collab_type_long <- compact_data_with_citation_keys_no_fmd %>% 
-  separate_rows(disease,  sep = ' ') %>% 
-  group_by(disease) %>% 
-  count(disease, collab_type, sort = TRUE) %>% 
-  ungroup()
-
-disease_by_collab_type_proportions <- disease_by_collab_type_long %>% 
-  group_by(disease) %>%
-  summarise(collab_type = collab_type, 
-            n = n,
-            prop = round(n/sum(n), 1)
-            )
-
-disease_by_collab_type_plot <- ggplot(disease_by_collab_type_long) + 
-  geom_bar(aes(x = disease, 
-               y = n, 
-               fill = collab_type
-               ), 
-           color = 'black',
-           stat = 'identity',
-           position = position_fill(reverse = TRUE)
-           ) + 
-  # geom_text(data = disease_by_collab_type_proportions, 
-  #           aes(x = disease, 
-  #               y = prop, 
-  #               label = n, 
-  #               ),
-  #           nudge_y = -0.05
-  #           ) +
-  labs(x = '**Disease**', y = '**Number of studies**') + 
-  coord_flip() +
-  md_theme_minimal(base_size = 12)
-
-print(disease_by_collab_type_plot)
-```
 
 ## Model characteristics 
 
@@ -552,14 +580,12 @@ print(disease_by_collab_type_plot)
 
 ```{r}
 individual_representation <- compact_data_with_citation_keys_no_fmd %>% 
-  group_by(collab_type) %>% 
-  count(individual_representation, sort = TRUE) %>% 
+  count(collab_type, individual_representation, sort = TRUE) %>% 
   pivot_wider(names_from = individual_representation, values_from = n) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('compartments', 'agents', 'individuals_representation_other')) %>% 
+  adorn_pct_formatting(... = c('compartments', 'agents', 'individuals_representation_other')) %>% 
+  adorn_ns(... = c('compartments', 'agents', 'individuals_representation_other'))
 
 knitr::kable(individual_representation)
 ```
@@ -578,16 +604,14 @@ knitr::kable(individual_representation)
 
 ```{r}
 space_representation <- compact_data_with_citation_keys_no_fmd %>% 
-  group_by(collab_type) %>% 
-  count(space_representation, sort = TRUE) %>% 
+  count(collab_type, space_representation, sort = TRUE) %>% 
   pivot_wider(names_from = space_representation, values_from = n) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('no', 'yes')) %>% 
+  adorn_pct_formatting(... = c('no', 'yes')) %>% 
+  adorn_ns(... = c('no', 'yes'))
 
-knitr::kable(space_representation, caption = 'Spatial models')
+knitr::kable(space_representation, caption = 'Number of studies using models with explicit spatial representation')
 ```
 
 <!-- ### Spatial models by model structure -->
@@ -605,14 +629,12 @@ knitr::kable(space_representation, caption = 'Spatial models')
 
 ```{r}
 stochastic_vs_deterministic <- compact_data_with_citation_keys_no_fmd %>% 
-  group_by(collab_type) %>% 
-  count(model_structure) %>% 
+  count(collab_type, model_structure) %>% 
   pivot_wider(names_from = model_structure, values_from = n) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('both', 'deterministic', 'stochastic')) %>% 
+  adorn_pct_formatting(... = c('both', 'deterministic', 'stochastic')) %>% 
+  adorn_ns(... = c('both', 'deterministic', 'stochastic')) 
 
 knitr::kable(stochastic_vs_deterministic, caption = 'Model dynamics (deterministic versus stochastic)')
 ```
@@ -627,14 +649,12 @@ knitr::kable(stochastic_vs_deterministic, caption = 'Model dynamics (determinist
 ```{r}
 #wide data for table
 model_parametrization_wide <- compact_data_with_citation_keys_no_fmd %>% 
-  group_by(collab_type) %>% 
-  count(parametrization, sort = TRUE) %>% 
+  count(collab_type, parametrization, sort = TRUE) %>% 
   pivot_wider(names_from = collab_type, values_from = n) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = -c('Total')) %>% 
+  adorn_pct_formatting(... = -c('Total')) %>% 
+  adorn_ns(... = -c('Total')) 
 
 #table
 knitr::kable(model_parametrization_wide, caption = 'How model parameters are obtained')
@@ -670,8 +690,7 @@ ggplot(data = model_parametrization_long,
 ```{r}
 #wide data for table
 model_validation_wide <- compact_data_with_citation_keys_no_fmd %>% 
-  group_by(collab_type) %>% 
-  count(validation, sort = TRUE) %>% 
+  count(collab_type, validation, sort = TRUE) %>% 
   pivot_wider(names_from = validation, values_from = n) %>% 
   replace_na(list(none = 0, 
                   data = 0, 
@@ -680,11 +699,10 @@ model_validation_wide <- compact_data_with_citation_keys_no_fmd %>%
                   data_and_another_model = 0
                   )
              ) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = -c('Total', 'collab_type')) %>% 
+  adorn_pct_formatting(... = -c('Total', 'collab_type')) %>% 
+  adorn_ns(... = -c('Total', 'collab_type')) 
 
 #table
 knitr::kable(model_validation_wide, caption = 'How the model\'s performance is assessed')
@@ -695,16 +713,12 @@ knitr::kable(model_validation_wide, caption = 'How the model\'s performance is a
 
 ```{r}
 mod_structure_vs_sensitivity_analysis <- compact_data_with_citation_keys_no_fmd %>% 
-  count(model_structure, 
-        sensitivity_analysis, 
-        sort = TRUE
-        ) %>% 
+  count(model_structure, sensitivity_analysis, sort = TRUE) %>% 
   pivot_wider(names_from = sensitivity_analysis, values_from = n) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('no', 'yes')) %>% 
+  adorn_pct_formatting(... = c('no', 'yes')) %>% 
+  adorn_ns(... = c('no', 'yes'))
 
 knitr::kable(mod_structure_vs_sensitivity_analysis)
 
@@ -727,14 +741,12 @@ knitr::kable(sensitivity_analysis)
 data_use_and_availability <- compact_data_with_citation_keys_no_fmd %>% 
   filter(data_available != 'not_applicable') %>%
   select(-data_used) %>% 
-  group_by(collab_type) %>% 
-  count(data_available, sort = TRUE) %>% 
+  count(collab_type, data_available, sort = TRUE) %>% 
   pivot_wider(names_from = data_available, values_from = n) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('no', 'yes')) %>% 
+  adorn_pct_formatting(... = c('no', 'yes')) %>% 
+  adorn_ns(... = c('no', 'yes')) 
 
 knitr::kable(data_use_and_availability, 
              caption = 'How often publicly available data is used for modelling outbreak response interventions')
@@ -747,14 +759,12 @@ knitr::kable(data_use_and_availability,
 ```{r}
 
 code_availability <- compact_data_with_citation_keys_no_fmd %>% 
-  group_by(collab_type) %>% 
-  count(simulation_code_available) %>% 
+  count(collab_type, simulation_code_available) %>% 
   pivot_wider(names_from = simulation_code_available, values_from = n) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('no', 'yes')) %>% 
+  adorn_pct_formatting(... = c('no', 'yes')) %>% 
+  adorn_ns(... = c('no', 'yes')) 
 
 knitr::kable(code_availability)
 ```
