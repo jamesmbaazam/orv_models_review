@@ -24,6 +24,7 @@ library('bib2df')
 library('conflicted')
 library('Hmisc')
 library('treemapify')
+library('ggwordcloud')
 
 #resolve package function conflicts
 conflict_prefer('filter', 'dplyr')
@@ -643,6 +644,45 @@ knitr::kable(stochastic_vs_deterministic, caption = 'Model dynamics (determinist
 ## Modelling methods
 
 ### Outcomes measured
+```{r}
+outcomes_tally_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
+  mutate(outcome_measured = str_trim(outcome_measured)) %>% 
+  separate_rows(outcome_measured, sep = ',') %>% 
+  group_by(outcome_measured) %>% 
+  distinct(title, .keep_all = TRUE) %>% 
+  ungroup(outcome_measured) %>% 
+  filter(outcome_measured %nin% c('outcome_other', '')) %>% 
+  group_by(collab_type) %>% 
+  count(outcome_measured) %>% 
+  arrange(desc(n), .by_group = TRUE) %>% 
+  slice(1:6) %>% 
+  ungroup()
+
+
+# outcomes_tally_plot <- ggplot(data = outcomes_tally_by_collab_type, 
+#                               aes(x = reorder(outcome_measured, n), 
+#                                   y = n
+#                                   )
+#                               ) + 
+#   geom_bar(stat = 'identity') + 
+#   labs(x = '**Outcome**', y = '**Number of times used**') +
+#   coord_flip() +
+#   facet_wrap('collab_type') +
+#   md_theme_minimal()
+
+outcomes_tally_plot <- ggplot(data = outcomes_tally_by_collab_type, 
+                              aes(label = outcome_measured, 
+                                  size = n
+                                  )
+                              ) + 
+  geom_text_wordcloud_area() +
+  scale_size_area(max_size = 10) + 
+  theme_minimal() + 
+  facet_wrap(~ collab_type)
+
+print(outcomes_tally_plot)
+```
+
 
 ### Parametrization methods
 
