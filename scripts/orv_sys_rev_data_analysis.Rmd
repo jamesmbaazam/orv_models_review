@@ -670,6 +670,10 @@ outcomes_tally_by_collab_type <- compact_data_with_citation_keys_no_fmd %>%
 #   facet_wrap('collab_type') +
 #   md_theme_minimal()
 
+collab_type_labels <- c('purely_academic' = 'Purely academic', 
+                        'mixed' = 'Mixed'
+                        )
+
 outcomes_tally_plot <- ggplot(data = outcomes_tally_by_collab_type, 
                               aes(label = outcome_measured, 
                                   size = n
@@ -677,10 +681,21 @@ outcomes_tally_plot <- ggplot(data = outcomes_tally_by_collab_type,
                               ) + 
   geom_text_wordcloud_area() +
   scale_size_area(max_size = 10) + 
-  theme_minimal() + 
-  facet_wrap(~ collab_type)
+  facet_wrap(~ collab_type, 
+             labeller = as_labeller(collab_type_labels),
+             strip.position = 'top'
+             ) +
+  #theme_minimal() + 
+  theme(strip.text = element_text(size = 15, face = 'bold'))  
+
 
 print(outcomes_tally_plot)
+
+ggsave(filename = 'outcomes_tally_plot.png',
+       plot = outcomes_tally_plot, 
+       device = 'png',
+       path = save_fig_here
+       )
 ```
 
 
