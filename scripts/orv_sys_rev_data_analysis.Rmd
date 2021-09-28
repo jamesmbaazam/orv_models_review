@@ -783,7 +783,11 @@ knitr::kable(mod_structure_vs_sensitivity_analysis)
 sensitivity_analysis <- compact_data_with_citation_keys_no_fmd %>% 
   group_by(collab_type) %>% 
   count(sensitivity_analysis, sort = TRUE) %>% 
-  pivot_wider(names_from = sensitivity_analysis, values_from = n)
+  pivot_wider(names_from = sensitivity_analysis, values_from = n) %>% 
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('no', 'yes')) %>% 
+  adorn_pct_formatting(... = c('no', 'yes')) %>% 
+  adorn_ns(... = c('no', 'yes'))
 
 knitr::kable(sensitivity_analysis)
 
@@ -794,8 +798,7 @@ knitr::kable(sensitivity_analysis)
 
 ```{r}
 data_use_and_availability <- compact_data_with_citation_keys_no_fmd %>% 
-  filter(data_available != 'not_applicable') %>%
-  select(-data_used) %>% 
+  filter(data_used == 'yes') %>%
   count(collab_type, data_available, sort = TRUE) %>% 
   pivot_wider(names_from = data_available, values_from = n) %>% 
   adorn_totals(where = c('row', 'col')) %>% 
@@ -804,7 +807,7 @@ data_use_and_availability <- compact_data_with_citation_keys_no_fmd %>%
   adorn_ns(... = c('no', 'yes')) 
 
 knitr::kable(data_use_and_availability, 
-             caption = 'How often publicly available data is used for modelling outbreak response interventions')
+             caption = 'How often is the data used available for public access')
 
 ```
 
