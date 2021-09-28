@@ -419,6 +419,49 @@ knitr::kable(stochastic_vs_deterministic_fmd,
 
 
 ## Modelling methods
+### Outcomes measured
+```{r}
+outcomes_tally_by_collab_type <- fmd_data %>% 
+  mutate(outcome_measured = str_trim(outcome_measured)) %>% 
+  separate_rows(outcome_measured, sep = ',') %>% 
+  group_by(outcome_measured) %>% 
+  distinct(title, .keep_all = TRUE) %>% 
+  ungroup(outcome_measured) %>% 
+  filter(outcome_measured %nin% c('outcome_other', '')) %>% 
+  group_by(collab_type) %>% 
+  count(outcome_measured) %>% 
+  arrange(desc(n), .by_group = TRUE) %>% 
+  slice(1:6) %>% 
+  ungroup()
+
+
+collab_type_labels <- c('purely_academic' = 'Purely academic', 
+                        'mixed' = 'Mixed'
+                        )
+
+outcomes_tally_plot <- ggplot(data = outcomes_tally_by_collab_type, 
+                              aes(label = outcome_measured, 
+                                  size = n
+                                  )
+                              ) + 
+  geom_text_wordcloud_area() +
+  scale_size_area(max_size = 7) + 
+  facet_wrap(~ collab_type, 
+             labeller = as_labeller(collab_type_labels),
+             strip.position = 'top'
+             ) +
+  #theme_minimal() + 
+  theme(strip.text = element_text(size = 15, face = 'bold'))  
+
+#save the plot
+ggsave(filename = 'outcomes_tally_fmd_plot.png',
+       plot = outcomes_tally_plot, 
+       device = 'png',
+       path = save_fig_here
+       )
+
+print(outcomes_tally_plot)
+```
 
 ### Parametrization methods
 
