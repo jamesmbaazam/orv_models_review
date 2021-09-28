@@ -470,14 +470,12 @@ print(outcomes_tally_plot)
 model_parametrization_fmd_wide <- fmd_data %>% 
   group_by(collab_type) %>% 
   count(parametrization, sort = TRUE) %>% 
-  pivot_wider(names_from = collab_type, values_from = n) %>% 
-  replace_na(list(mixed = 0, purely_academic = 0)) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages() %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() %>% 
-  ungroup()
-
+  pivot_wider(names_from = parametrization, values_from = n) %>% 
+  replace_na(list('literature and fitted' = 0, 'expert_opinion and fitted' = 0)) %>% 
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = -c('Total', 'collab_type')) %>% 
+  adorn_pct_formatting(... = -c('Total', 'collab_type')) %>% 
+  adorn_ns(... = -c('Total', 'collab_type')) 
 #table
 knitr::kable(model_parametrization_fmd_wide, 
              caption = 'How model parameters are obtained'
