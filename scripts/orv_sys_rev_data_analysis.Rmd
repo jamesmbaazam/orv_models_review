@@ -501,7 +501,7 @@ knitr::kable(intervention_categories, caption = 'Number of studies per intervent
 
 ```{r}
 vax_impact_conclusions <- compact_data_with_citation_keys_no_fmd %>% 
-  filter(vax_modelled_with_non_vax == 'yes') %>% 
+  filter(intervention_type == 'vax_single') %>% 
   count(collab_type, is_vax_effective, sort = T) %>% 
   pivot_wider(names_from = is_vax_effective, values_from = n) %>% 
   rename('inconclusive' = 'the_outcomes_were_inconclusive') %>% 
