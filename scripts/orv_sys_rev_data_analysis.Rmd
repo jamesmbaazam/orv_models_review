@@ -781,8 +781,7 @@ knitr::kable(mod_structure_vs_sensitivity_analysis)
 
 ```{r}
 sensitivity_analysis <- compact_data_with_citation_keys_no_fmd %>% 
-  group_by(collab_type) %>% 
-  count(sensitivity_analysis, sort = TRUE) %>% 
+  count(collab_type, sensitivity_analysis, sort = TRUE) %>% 
   pivot_wider(names_from = sensitivity_analysis, values_from = n) %>% 
   adorn_totals(where = c('row', 'col')) %>% 
   adorn_percentages(... = c('no', 'yes')) %>% 
