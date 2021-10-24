@@ -515,6 +515,20 @@ knitr::kable(vax_impact_conclusions,
              caption = 'Conclusions about impact of vaccination'
              )
 ```
+```{r}
+no_vax_modelled <- compact_data_with_citation_keys_no_fmd %>% 
+    separate_rows(disease,  sep = ' ') %>% 
+    filter(vax_modelled == 'no') %>% 
+    count(disease, sort = TRUE, name = 'num_of_studies') %>% 
+     adorn_totals(where = 'row') %>% 
+    adorn_percentages(denominator = 'col') %>% 
+    adorn_pct_formatting() %>% 
+    adorn_ns()
+   
+
+
+knitr::kable(no_vax_modelled, caption = 'Number of studies per disease for which vaccination was not modelled')
+```
 
 # Secondary objectives of review
 
