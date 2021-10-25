@@ -718,6 +718,28 @@ knitr::kable(stochastic_vs_deterministic, caption = 'Model dynamics (determinist
 
 ### Outcomes measured
 ```{r}
+outcomes_overall <- compact_data_with_citation_keys_no_fmd %>% 
+  mutate(outcome_measured = str_trim(outcome_measured)) %>% 
+  separate_rows(outcome_measured, sep = ',') %>% 
+  group_by(outcome_measured) %>% 
+  distinct(title, .keep_all = TRUE) %>% 
+  ungroup(outcome_measured) %>% 
+  filter(outcome_measured %nin% c('outcome_other', '')) %>% 
+  count(outcome_measured) %>% 
+  arrange(desc(n), .by_group = TRUE) %>% 
+  slice(1:15) %>% 
+  ungroup() %>% 
+    adorn_totals(where = c('row')) %>% 
+  adorn_percentages(denominator = 'col') %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns() 
+
+
+knitr::kable(outcomes_overall, caption = 'Number of studies per outcome measured')
+```
+
+
+```{r}
 outcomes_tally_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
   mutate(outcome_measured = str_trim(outcome_measured)) %>% 
   separate_rows(outcome_measured, sep = ',') %>% 
