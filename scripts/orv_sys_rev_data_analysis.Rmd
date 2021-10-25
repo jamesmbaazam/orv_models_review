@@ -13,6 +13,7 @@ output:
 #' load packages
 library('tidyverse')
 library('readr')
+library('xlsx')
 library('ggthemes')
 library('mdthemes')
 library('scales')
@@ -528,6 +529,50 @@ no_vax_modelled <- compact_data_with_citation_keys_no_fmd %>%
 
 
 knitr::kable(no_vax_modelled, caption = 'Number of studies per disease for which vaccination was not modelled')
+```
+
+```{r}
+vax_impact_by_disease <- compact_data_with_citation_keys_no_fmd %>% 
+  filter(intervention_type == 'vax_single') %>% 
+  count(disease, is_vax_effective, sort = T) %>% 
+  pivot_wider(names_from = is_vax_effective, values_from = n) %>% 
+  rename('inconclusive' = 'the_outcomes_were_inconclusive') %>% 
+    replace_na(list(yes = 0, no = 0, inconclusive = 0)) %>% 
+  adorn_totals(where = c('row', 'col')) %>% 
+  adorn_percentages(... = c('yes', 'no', 'inconclusive')) %>% 
+  adorn_pct_formatting(... = c('yes', 'no', 'inconclusive')) %>% 
+  adorn_ns(... = c('yes', 'no', 'inconclusive')) 
+
+#Print the results
+knitr::kable(vax_impact_by_disease, 
+             caption = 'Conclusions about impact of vaccination per disease'
+             )
+```
+```{r}
+no_vax_impact_by_disease_citation_table <- compact_data_with_citation_keys_no_fmd %>% 
+  filter(intervention_type == 'vax_single', is_vax_effective %in% c('no', 'the_outcomes_were_inconclusive')) %>% 
+  select(title, disease, bibtexkey, publication_year, intervention_modelled)
+
+#Print the results
+# knitr::kable(no_vax_impact_by_disease_citation_table, 
+#              caption = 'Studies that did not find vaccination as most impactful'
+#              )
+
+write.xlsx(no_vax_impact_by_disease_citation_table, file = '../citation_tables/no_vax_impact_by_disease_citation_table.xlsx')
+```
+
+
+```{r}
+vax_as_single_intervention_studies <- compact_data_with_citation_keys_no_fmd %>% 
+  filter(intervention_type == 'vax_single') %>% 
+  select(title, disease, bibtexkey, publication_year, intervention_modelled)
+
+#Print the results
+# knitr::kable(no_vax_impact_by_disease_citation_table, 
+#              caption = 'Studies that did not find vaccination as most impactful'
+#              )
+
+write.xlsx(vax_as_single_intervention_studies, file = '../citation_tables/vax_as_single_intervention_studies.xlsx')
 ```
 
 # Secondary objectives of review
