@@ -403,7 +403,7 @@ knitr::kable(continents_studied_by_count,
 
 ### Geographic connection of authors to the studied locations 
 
-#### Top 5 countries
+#### Top 5 countries studied
 
 ```{r}
 author_connectedness_top_5_countries <- compact_data_with_citation_keys_no_fmd %>% 
@@ -423,7 +423,7 @@ author_connectedness_top_5_countries <- compact_data_with_citation_keys_no_fmd %
 knitr::kable(author_connectedness_top_5_countries)
 ```
 
-#### Aggregated
+#### Aggregated: author affiliation in the studied location
 
 ```{r}
 author_connectedness_to_location_aggreg <- compact_data_with_citation_keys_no_fmd %>% 
@@ -437,7 +437,7 @@ author_connectedness_to_location_aggreg <- compact_data_with_citation_keys_no_fm
   adorn_pct_formatting(... = c('yes', 'no')) %>% 
   adorn_ns(... = c('yes', 'no')) 
 
-knitr::kable(author_connectedness_to_location_aggreg)
+knitr::kable(author_connectedness_to_location_aggreg, caption = 'At least one author with an affiliation in the studied location')
 ```
 
 ## Diseases studied per collab type
