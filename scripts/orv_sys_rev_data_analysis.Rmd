@@ -144,7 +144,7 @@ fmd_data <- compact_data_with_citation_keys %>%
 ```
 
 
-We did not include foot and mouth disease (FMD) in all the primary analyses. All analyses pertaining to FMD can be found in the supplementary files.  
+As indicated in the main text, we did not include foot and mouth disease (FMD) in the primary analyses. All analyses pertaining to FMD can be found in the dedicated supplementary files.  
 
 # Publications per year
 
