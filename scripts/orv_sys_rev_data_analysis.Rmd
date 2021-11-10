@@ -656,23 +656,6 @@ knitr::kable(outbreak_types_by_collab_type,
              )
 ```
 
-
-## Modelling objectives and outbreak type by collaboration types
-
-```{r echo=FALSE}
-objectives_types_overall <- compact_data_with_citation_keys_no_fmd %>% 
-  count(objectives, name = 'num_of_studies', sort = TRUE) %>% 
-  adorn_totals(where = c('row')) %>% 
-  adorn_percentages(denominator = 'col') %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns() 
-
-knitr::kable(objectives_types_overall, 
-             caption = 'Number of studies per objective types'
-             ) 
-```
-
-
 ```{r echo=FALSE}
 objectives_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
   count(objectives, collab_type, name = 'num_of_studies', sort = TRUE) %>% 
