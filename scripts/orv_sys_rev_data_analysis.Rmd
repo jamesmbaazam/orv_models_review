@@ -1,7 +1,5 @@
 ---
 title: "Outbreak response models of vaccine-preventable diseases in humans (1970-2019) - A systematic review (Primary Analysis)"
-author: "James Azam"
-date: '`r format(Sys.Date(), "%B %d, %Y")`'
 output:
   pdf_document: 
     toc: yes
@@ -27,7 +25,6 @@ library('countrycode')
 library('bib2df')
 library('conflicted')
 library('Hmisc')
-library('treemapify')
 library('ggwordcloud')
 
 #resolve package function conflicts
