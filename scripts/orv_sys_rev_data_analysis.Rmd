@@ -687,7 +687,7 @@ individual_representation <- compact_data_with_citation_keys_no_fmd %>%
   adorn_pct_formatting(... = c('compartments', 'agents', 'individuals_representation_other')) %>% 
   adorn_ns(... = c('compartments', 'agents', 'individuals_representation_other'))
 
-knitr::kable(individual_representation)
+knitr::kable(individual_representation, caption = 'How individuals were represented')
 ```
 <!-- ### Individual representation by model structure -->
 <!-- ```{r} -->
@@ -711,7 +711,7 @@ space_representation <- compact_data_with_citation_keys_no_fmd %>%
   adorn_pct_formatting(... = c('no', 'yes')) %>% 
   adorn_ns(... = c('no', 'yes'))
 
-knitr::kable(space_representation, caption = 'Number of studies using models with explicit spatial representation')
+knitr::kable(space_representation, caption = 'Was space explicitly represented in the model')
 ```
 
 <!-- ### Spatial models by model structure -->
