@@ -196,13 +196,17 @@ ggsave(filename = 'publications_per_year.png',
        path = save_fig_here
        )
 
-```
+ggsave(filename = 'publications_per_year.png', 
+       plot = publications_per_year_plot, 
+       device = 'png', 
+       path = save_thesis_fig_here
+       )
 
-# Primary objectives of review
+```
 
 ## Collaboration patterns in time
 
-### Number of studies per combinations of collaboration types
+### Number of studies per combinations of author affiliation types
 
 ```{r echo=FALSE}
 #' Count by collaboration types and make a bar plot
@@ -269,6 +273,12 @@ ggsave(filename = 'collab_proportions.png',
        path = save_fig_here
        )
 
+ggsave(filename = 'collab_proportions.png', 
+       plot = collab_proportions_plot, 
+       device = 'png', 
+       path = save_thesis_fig_here
+       )
+
 ```
 
 
@@ -310,6 +320,12 @@ ggsave(filename = 'total_collabs_per_year_plot.png',
        plot = collabs_per_year_plot, 
        device = 'png',
        path = save_fig_here
+       )
+
+ggsave(filename = 'total_collabs_per_year_plot.png',
+       plot = collabs_per_year_plot, 
+       device = 'png',
+       path = save_thesis_fig_here
        )
 
 ```
@@ -813,6 +829,12 @@ ggsave(filename = 'outcomes_tally_plot.png',
        plot = outcomes_tally_plot, 
        device = 'png',
        path = save_fig_here
+       )
+
+ggsave(filename = 'outcomes_tally_plot.png',
+       plot = outcomes_tally_plot, 
+       device = 'png',
+       path = save_thesis_fig_here
        )
 ```
 
