@@ -615,9 +615,12 @@ vax_as_single_intervention_studies <- compact_data_with_citation_keys_no_fmd %>%
 write.xlsx(vax_as_single_intervention_studies, file = '../citation_tables/vax_as_single_intervention_studies.xlsx')
 ```
 
-# Secondary objectives of review
+## Modelling objectives 
+We grouped studies into whether they assessed the impact of a future intervention strategy (prospective), a past intervention, or both (dual). 
 
-## Modelling objectives
+In general, there were more (73.2%; 167/228) studies about prospective intervention impact assessments than retrospective assessments (24.6%; 56/228), and the dual (2.2%; 5/228). A similar pattern was observed across the two collaboration types except that purely academic collaborations were more likely to perform the dual assessments.  
+
+In terms of the outbreak types, there was an approximately equal number of papers about real and hypothetical outbreaks overall, and there was no clear difference between the two collaborations.  
 
 ```{r echo=FALSE}
 #count the number of studies per objective type
@@ -757,6 +760,14 @@ knitr::kable(stochastic_vs_deterministic, caption = 'Model dynamics (determinist
 ## Modelling methods
 
 ### Outcomes measured
+
+We tallied the overall top five outcomes most used between the two collaboration types. 
+
+The top five most commonly used outcomes, irrespective of collaboration type, were: final epidemic size, attack rate, timing of epidemic peak, cases averted, and outbreak duration.
+
+There was no difference in the two collaboration types as they were commonly used by both groups.
+
+
 ```{r}
 outcomes_overall <- compact_data_with_citation_keys_no_fmd %>% 
   mutate(outcome_measured = str_trim(outcome_measured)) %>% 
@@ -907,7 +918,9 @@ knitr::kable(model_validation_wide, caption = 'How the model\'s performance is a
 
 ### Sensitivity analysis
 
-```{r}
+Less than half (46.5%; 106/228) of the total studies performed sensitivity analyses. There was no clear difference between the collaborations. 
+
+```{r eval=FALSE}
 mod_structure_vs_sensitivity_analysis <- compact_data_with_citation_keys_no_fmd %>% 
   count(model_structure, sensitivity_analysis, sort = TRUE) %>% 
   pivot_wider(names_from = sensitivity_analysis, values_from = n) %>% 
