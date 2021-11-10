@@ -544,6 +544,7 @@ vax_impact_conclusions <- compact_data_with_citation_keys_no_fmd %>%
   filter(intervention_type == 'vax_single') %>% 
   count(collab_type, is_vax_effective, sort = T) %>% 
   pivot_wider(names_from = is_vax_effective, values_from = n) %>% 
+    replace_na(list(yes = 0, n0 = 0, the_outcomes_were_inconclusive = 0)) %>% 
   rename('inconclusive' = 'the_outcomes_were_inconclusive') %>% 
   adorn_totals(where = c('row', 'col')) %>% 
   adorn_percentages(... = c('yes', 'no', 'inconclusive')) %>% 
@@ -555,7 +556,7 @@ knitr::kable(vax_impact_conclusions,
              caption = 'Conclusions about impact of vaccination'
              )
 ```
-```{r}
+```{r eval=FALSE}
 no_vax_modelled <- compact_data_with_citation_keys_no_fmd %>% 
     separate_rows(disease,  sep = ' ') %>% 
     filter(vax_modelled == 'no') %>% 
@@ -570,7 +571,7 @@ no_vax_modelled <- compact_data_with_citation_keys_no_fmd %>%
 knitr::kable(no_vax_modelled, caption = 'Number of studies per disease for which vaccination was not modelled')
 ```
 
-```{r}
+```{r eval=FALSE}
 vax_impact_by_disease <- compact_data_with_citation_keys_no_fmd %>% 
   filter(intervention_type == 'vax_single') %>% 
   count(disease, is_vax_effective, sort = T) %>% 
@@ -587,7 +588,7 @@ knitr::kable(vax_impact_by_disease,
              caption = 'Conclusions about impact of vaccination per disease'
              )
 ```
-```{r}
+```{r eval=FALSE}
 no_vax_impact_by_disease_citation_table <- compact_data_with_citation_keys_no_fmd %>% 
   filter(intervention_type == 'vax_single', is_vax_effective %in% c('no', 'the_outcomes_were_inconclusive')) %>% 
   select(title, disease, bibtexkey, publication_year, intervention_modelled, is_vax_effective)
@@ -601,7 +602,7 @@ write.xlsx(no_vax_impact_by_disease_citation_table, file = '../citation_tables/n
 ```
 
 
-```{r}
+```{r eval=FALSE}
 vax_as_single_intervention_studies <- compact_data_with_citation_keys_no_fmd %>% 
   filter(intervention_type == 'vax_single') %>% 
   select(title, disease, bibtexkey, publication_year, intervention_modelled)
