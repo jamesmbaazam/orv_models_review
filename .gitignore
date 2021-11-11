@@ -58,3 +58,5 @@ scripts/orv_sys_rev_data_analysis_FMD.md
 *.xlsx
 
 *.tex
+
+*.log
