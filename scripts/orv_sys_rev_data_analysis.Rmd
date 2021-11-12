@@ -338,7 +338,27 @@ prisma_chart
 
 <!-- ## Collaboration patterns in geographic space -->
 
-### Real versus hypothetical locations
+## Collaboration types (aggregated)
+```{r}
+#' Count by collaboration types and make a bar plot
+studies_per_collab_type <- compact_data_with_citation_keys_no_fmd %>%
+    count(collab_type, sort = TRUE) %>% 
+    arrange(desc(n)) %>% 
+    adorn_totals() %>% 
+    adorn_percentages(denominator = 'col') %>% 
+    adorn_pct_formatting() %>% 
+    adorn_ns()
+
+knitr::kable(studies_per_collab_type, caption = 'Number of studies per collaboration type (Human VPDs)',
+             format = "latex", booktabs = TRUE) %>% 
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
+```
+
+
+
+## Locations studied
+
+### Real versus hypothetical 
 
 ```{r}
 location_types_tally <- compact_data_with_citation_keys_no_fmd %>% 
