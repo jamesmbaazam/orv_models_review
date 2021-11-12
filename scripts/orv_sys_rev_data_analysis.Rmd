@@ -221,7 +221,7 @@ prisma_chart
 <!-- knitr::kable(collab_types_count,  -->
 <!--              format = "latex", booktabs = TRUE,  -->
 <!--              caption = 'Number of publications per author affiliation type combination') %>%  -->
-<!--         kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))  -->
+<!--         kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))  -->
 <!-- ``` -->
 
 <!-- ### Proportions of the total publications per year by collaboration type -->
@@ -355,7 +355,7 @@ location_types_tally <- compact_data_with_citation_keys_no_fmd %>%
 knitr::kable(location_types_tally, 
              caption = 'Number of studies per location type', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
   
 ```
 
@@ -374,7 +374,7 @@ larger_geographies_tally <- compact_data_with_citation_keys_no_fmd %>%
   adorn_ns()
 
 knitr::kable(larger_geographies_tally, caption = 'Number of studies per location larger than one country', format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
   
 ```
 
@@ -399,16 +399,16 @@ countries_studied_by_count_aggregated <- countries_studied_by_count %>%
   adorn_percentages(denominator = 'col') %>% 
   adorn_pct_formatting() %>% 
   adorn_ns() %>% 
-  ungroup() %>% 
-  slice(1:6)
+  ungroup() 
 
 
 #Print the results
 knitr::kable(countries_studied_by_count_aggregated, 
              caption = 'Number of studies per country', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'), font_size = 7)
 ``` 
+
 ### Continents studied
 
 ```{r}
@@ -441,24 +441,23 @@ continents_studied_by_count <- countries_studied_by_count %>%
 knitr::kable(continents_studied_by_count, 
              caption = 'Number of studies per continent', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ``` 
 
 
 
-### Geographic connection of authors to the studied locations 
-
-#### Top 5 countries studied
+## Geographic connection of authors to the studied locations 
 
 ```{r}
 author_connectedness_top_5_countries <- compact_data_with_citation_keys_no_fmd %>% 
   filter(author_in_country_studied != 'not_applicable') %>% 
   filter(country_studied %nin% c('none', 'west_africa', 'global', 'northern_hemisphere', 'southeast_asia', 'who_southeast_asia_region')) %>% 
+separate_rows(country_studied,  sep = ' ') %>% 
   group_by(collab_type) %>% 
   count(country_studied, author_in_country_studied, sort = TRUE) %>% 
   pivot_wider(names_from = author_in_country_studied, values_from = n) %>% 
   replace_na(list(yes = 0, no = 0)) %>% 
-  slice(n = 1:5) %>% 
+  arrange(collab_type, desc(yes)) %>% 
   adorn_totals(where = c('row', 'col')) %>% 
   adorn_percentages(... = c('yes', 'no')) %>% 
   adorn_pct_formatting(... = c('yes', 'no')) %>% 
@@ -466,11 +465,11 @@ author_connectedness_top_5_countries <- compact_data_with_citation_keys_no_fmd %
   ungroup()
 
 knitr::kable(author_connectedness_top_5_countries, caption = 'Studies with at least one author affiliation in the location studied', 
-             format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+             format = "latex", booktabs = TRUE, longtable = TRUE) %>% 
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position', 'repeat_header'), font_size = 8)
 ```
 
-#### Aggregated: author affiliation in the studied location
+### Author affiliation in the studied location (overall)
 
 ```{r}
 author_connectedness_to_location_aggreg <- compact_data_with_citation_keys_no_fmd %>% 
@@ -486,7 +485,7 @@ author_connectedness_to_location_aggreg <- compact_data_with_citation_keys_no_fm
 
 knitr::kable(author_connectedness_to_location_aggreg, caption = 'At least one author with an affiliation in the studied location', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
 <!-- ## Diseases studied per collab type -->
@@ -507,7 +506,7 @@ knitr::kable(author_connectedness_to_location_aggreg, caption = 'At least one au
 <!--   arrange(desc(Total)) -->
 
 <!-- knitr::kable(disease_studied_by_collab_type, caption = 'Number of studies per disease and collaboration type', format = "latex", booktabs = TRUE) %>%  -->
-<!--         kableExtra::kable_styling(latex_options = c('striped', 'hold_position')) -->
+<!--         kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position')) -->
 <!-- ``` -->
 
 
@@ -550,7 +549,7 @@ intervention_categories <- compact_data_with_citation_keys_no_fmd %>%
 
 
 knitr::kable(intervention_categories, caption = 'Number of studies per intervention categories', format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
 ### Impact of vaccination
@@ -571,9 +570,11 @@ vax_impact_conclusions <- compact_data_with_citation_keys_no_fmd %>%
 knitr::kable(vax_impact_conclusions, 
              caption = 'Conclusions about impact of vaccination', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position')
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position')
                                   )
 ```
+
+
 ```{r eval=FALSE}
 no_vax_modelled <- compact_data_with_citation_keys_no_fmd %>% 
     separate_rows(disease,  sep = ' ') %>% 
@@ -587,8 +588,10 @@ no_vax_modelled <- compact_data_with_citation_keys_no_fmd %>%
 
 
 knitr::kable(no_vax_modelled, caption = 'Number of studies per disease for which vaccination was not modelled', format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
+
+
 
 ```{r eval=FALSE}
 vax_impact_by_disease <- compact_data_with_citation_keys_no_fmd %>% 
@@ -606,8 +609,11 @@ vax_impact_by_disease <- compact_data_with_citation_keys_no_fmd %>%
 knitr::kable(vax_impact_by_disease, 
              caption = 'Conclusions about impact of vaccination per disease', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
+
+
+
 ```{r eval=FALSE}
 no_vax_impact_by_disease_citation_table <- compact_data_with_citation_keys_no_fmd %>% 
   filter(intervention_type == 'vax_single', is_vax_effective %in% c('no', 'the_outcomes_were_inconclusive')) %>% 
@@ -656,7 +662,7 @@ modelling_objectives_count <- compact_data_with_citation_keys_no_fmd %>%
 knitr::kable(modelling_objectives_count,
              caption = 'Study objectives by collaboration type', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
 ## Outbreak types
@@ -675,10 +681,11 @@ outbreak_types_by_collab_type <- compact_data_with_citation_keys_no_fmd %>%
 knitr::kable(outbreak_types_by_collab_type,
              caption = 'outbreak types by collaboration type', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
-```{r echo=FALSE}
+
+```{r eval=FALSE}
 objectives_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
   count(objectives, collab_type, name = 'num_of_studies', sort = TRUE) %>% 
   pivot_wider(names_from = objectives, 
@@ -693,13 +700,13 @@ objectives_by_collab_type <- compact_data_with_citation_keys_no_fmd %>%
 knitr::kable(objectives_by_collab_type, 
              caption = 'Number of studies per objective by collaboration type', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
 
-## Model characteristics 
+<!-- ## Model characteristics  -->
 
-### Individual heterogeneity: agent-based versus compartmental models
+## Individual heterogeneity: agent-based versus compartmental models
 
 ```{r}
 individual_representation <- compact_data_with_citation_keys_no_fmd %>% 
@@ -712,7 +719,7 @@ individual_representation <- compact_data_with_citation_keys_no_fmd %>%
 
 knitr::kable(individual_representation, caption = 'How individuals were represented', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 <!-- ### Individual representation by model structure -->
 <!-- ```{r} -->
@@ -738,7 +745,7 @@ space_representation <- compact_data_with_citation_keys_no_fmd %>%
 
 knitr::kable(space_representation, caption = 'Was space explicitly represented in the model',
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
 <!-- ### Spatial models by model structure -->
@@ -764,13 +771,13 @@ stochastic_vs_deterministic <- compact_data_with_citation_keys_no_fmd %>%
   adorn_ns(... = c('both', 'deterministic', 'stochastic')) 
 
 knitr::kable(stochastic_vs_deterministic, caption = 'Model dynamics (deterministic versus stochastic)', format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
 
-## Modelling methods
+<!-- ## Modelling methods -->
 
-### Outcomes measured
+## Outcomes measured
 
 <!-- We tallied the overall top five outcomes most used between the two collaboration types.  -->
 
@@ -797,13 +804,13 @@ outcomes_overall <- compact_data_with_citation_keys_no_fmd %>%
   adorn_ns() 
 
 
-knitr::kable(outcomes_overall, caption = 'Number of studies per outcome measured', 
-             format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+knitr::kable(outcomes_overall, caption = 'Model outcomes by collaboration type', 
+             format = "latex", booktabs = TRUE, longtable = TRUE) %>% 
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position', 'repeat_header'), font_size = 8)
 ```
 
 
-```{r}
+```{r eval=FALSE}
 outcomes_tally_by_collab_type <- compact_data_with_citation_keys_no_fmd %>% 
   mutate(outcome_measured = str_trim(outcome_measured)) %>% 
   separate_rows(outcome_measured, sep = ',') %>% 
@@ -814,7 +821,7 @@ outcomes_tally_by_collab_type <- compact_data_with_citation_keys_no_fmd %>%
   group_by(collab_type) %>% 
   count(outcome_measured) %>% 
   arrange(desc(n), .by_group = TRUE) %>% 
-  slice(1:6) %>% 
+  # slice(1:6) %>% 
   ungroup()
 
 
@@ -879,7 +886,7 @@ ggsave(filename = 'outcomes_tally_plot.png',
 <!-- #table -->
 <!-- knitr::kable(model_parametrization_wide, caption = 'How model parameters are obtained',  -->
 <!--              format = "latex", booktabs = TRUE) %>%  -->
-<!--         kableExtra::kable_styling(latex_options = c('striped', 'scale_down', 'hold_position')) -->
+<!--         kableExtra::kable_styling(latex_options = c('striped', 'scale_down', 'HOLD_position')) -->
 <!-- ``` -->
 
 <!-- ```{r eval=FALSE} -->
@@ -929,11 +936,11 @@ ggsave(filename = 'outcomes_tally_plot.png',
 <!-- #table -->
 <!-- knitr::kable(model_validation_wide, caption = 'How the model\'s performance is assessed',  -->
 <!--              format = "latex", booktabs = TRUE) %>%  -->
-<!--         kableExtra::kable_styling(latex_options = c('striped', 'scale_down', 'hold_position')) -->
+<!--         kableExtra::kable_styling(latex_options = c('striped', 'scale_down', 'HOLD_position')) -->
 <!-- ``` -->
 
 
-### Sensitivity analysis
+## Sensitivity analysis
 
 <!-- Less than half (46.5%; 106/228) of the total studies performed sensitivity analyses. There was no clear difference between the collaborations.  -->
 
@@ -948,7 +955,7 @@ mod_structure_vs_sensitivity_analysis <- compact_data_with_citation_keys_no_fmd 
 
 knitr::kable(mod_structure_vs_sensitivity_analysis, 'Sensitivity analysis in relation to model structure', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 
 ```
 
@@ -963,12 +970,12 @@ sensitivity_analysis <- compact_data_with_citation_keys_no_fmd %>%
 
 knitr::kable(sensitivity_analysis, caption = 'Sensitivity analysis', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 
 ```
 
 
-### Data use and data availability
+## Data use and data availability
 
 ```{r}
 data_use_and_availability <- compact_data_with_citation_keys_no_fmd %>% 
@@ -981,14 +988,14 @@ data_use_and_availability <- compact_data_with_citation_keys_no_fmd %>%
   adorn_ns(... = c('no', 'yes')) 
 
 knitr::kable(data_use_and_availability, 
-             caption = 'How often is the data used available for public access', 
+             caption = 'Data accessibility', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 
 ```
 
 
-### Code availability
+## Code availability
 
 ```{r}
 code_availability <- compact_data_with_citation_keys_no_fmd %>% 
@@ -1001,7 +1008,7 @@ code_availability <- compact_data_with_citation_keys_no_fmd %>%
 
 knitr::kable(code_availability, caption = 'Code availability', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
 ```{r eval=FALSE}
@@ -1161,8 +1168,8 @@ author_connectedness_to_location_aggreg <- fmd_data %>%
   adorn_ns(... = c('yes', 'no')) 
 
 knitr::kable(author_connectedness_to_location_aggreg, 
-             caption = 'Studies with at least one author affiliation in the location studied (by collaboration type)', format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+             caption = 'Studies with at least one author affiliation in the location studied', format = "latex", booktabs = TRUE) %>% 
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
 ## Interventions
@@ -1181,7 +1188,7 @@ intervention_categories_fmd <- fmd_data %>%
 
 
 knitr::kable(intervention_categories_fmd, caption = 'Number of studies per intervention type', format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
 ### Impact of vaccination
@@ -1202,7 +1209,7 @@ fmd_vax_impact_conclusions <- fmd_data %>%
 knitr::kable(fmd_vax_impact_conclusions, 
              caption = 'Conclusions about impact of vaccination', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
 ## Modelling objectives
@@ -1240,34 +1247,12 @@ outbreak_types_by_collab_type_fmd <- fmd_data %>%
 knitr::kable(outbreak_types_by_collab_type_fmd,
              caption = 'Study objectives by collaboration type', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
+<!-- ## Model characteristics  -->
 
-## Modelling objectives and outbreak type by collaboration types
-
-```{r echo=FALSE}
-objectives_and_outbreak_types_fmd <- fmd_data %>% 
-  count(objectives, outbreak_type, name = 'num_of_studies', sort = TRUE) %>% 
-  pivot_wider(names_from = objectives, 
-              values_from = num_of_studies
-              ) %>% 
-  replace_na(list(future = 0, past = 0, both = 0)) %>% 
-  adorn_totals(where = c('row', 'col')) %>% 
-  adorn_percentages(... = c('future', 'past')) %>% 
-  adorn_pct_formatting(... = c('future', 'past')) %>% 
-  adorn_ns(... = c('future', 'past')) 
-
-knitr::kable(objectives_and_outbreak_types_fmd, 
-             caption = 'Number of studies per objective and outbreak type', 
-             format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
-```
-
-
-## Model characteristics 
-
-### Individual heterogeneity: agent-based versus compartmental models
+## Individual heterogeneity: agent-based versus compartmental models
 
 ```{r}
 individual_representation_fmd <- fmd_data %>% 
@@ -1281,10 +1266,10 @@ individual_representation_fmd <- fmd_data %>%
 knitr::kable(individual_representation_fmd, 
              caption = 'How individuals are represented', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
-### Spatial heterogeneity
+## Spatial heterogeneity
 
 ```{r}
 space_representation_fmd <- fmd_data %>% 
@@ -1295,13 +1280,13 @@ space_representation_fmd <- fmd_data %>%
   adorn_pct_formatting(... = c('no', 'yes')) %>% 
   adorn_ns(... = c('no', 'yes'))
 
-knitr::kable(space_representation_fmd, caption = 'Spatial models', 
+knitr::kable(space_representation_fmd, caption = 'Models with spatial structure', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
 
-### Model dynamics: deterministic vs stochastic
+## Model dynamics: deterministic vs stochastic
 
 ```{r}
 stochastic_vs_deterministic_fmd <- fmd_data %>% 
@@ -1315,29 +1300,39 @@ stochastic_vs_deterministic_fmd <- fmd_data %>%
 knitr::kable(stochastic_vs_deterministic_fmd, 
              caption = 'Model dynamics (deterministic versus stochastic)', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
              
 ```
 
 
-## Modelling methods
+<!-- ## Modelling methods -->
 
-### Outcomes measured
+## Outcomes measured
 ```{r}
 outcomes_tally_by_collab_type <- fmd_data %>% 
   mutate(outcome_measured = str_trim(outcome_measured)) %>% 
   separate_rows(outcome_measured, sep = ',') %>% 
-  group_by(outcome_measured) %>% 
+  group_by(collab_type, outcome_measured) %>% 
   distinct(title, .keep_all = TRUE) %>% 
-  ungroup(outcome_measured) %>% 
   filter(outcome_measured %nin% c('outcome_other', '')) %>% 
-  group_by(collab_type) %>% 
-  count(outcome_measured) %>% 
-  arrange(desc(n), .by_group = TRUE) %>% 
-  slice(1:6) %>% 
-  ungroup()
+  count(collab_type, outcome_measured, name = 'num_of_studies') %>% 
+  ungroup(outcome_measured) %>% 
+  arrange(desc(num_of_studies), .by_group = TRUE) %>% 
+  ungroup() %>% 
+  adorn_totals(where = c('row')) %>% 
+  adorn_percentages(denominator = 'col') %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns() 
 
 
+knitr::kable(outcomes_tally_by_collab_type, 
+             caption = 'Model outcomes by collaboration type', 
+             format = "latex", booktabs = TRUE, longtable = TRUE) %>% 
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position', 'repeat_header'))
+```
+
+
+```{r eval=FALSE}
 collab_type_labels <- c('purely_academic' = 'Purely academic', 
                         'mixed' = 'Mixed'
                         )
@@ -1383,12 +1378,12 @@ model_parametrization_fmd_wide <- fmd_data %>%
   adorn_ns(... = -c('Total', 'collab_type')) 
 #table
 knitr::kable(model_parametrization_fmd_wide, 
-             caption = 'How model parameters are obtained', 
+             caption = 'Model parametrization methods', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'scale_down'))
+        kableExtra::kable_styling(latex_options = c('striped', 'scale_down',  'HOLD_position'))
 ```
 
-### Validation methods 
+## Validation methods 
 
 ```{r}
 #wide data for table
@@ -1408,13 +1403,13 @@ model_validation_fmd_wide <- fmd_data %>%
 
 #table
 knitr::kable(model_validation_fmd_wide, 
-             caption = 'How the model\'s performance is assessed', 
+             caption = 'Model validation methods', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped'))
+        kableExtra::kable_styling(latex_options = c('striped',  'HOLD_position'))
 ```
 
 
-### Sensitivity analysis
+## Sensitivity analysis
 
 ```{r}
 sensitivity_analysis_fmd <- fmd_data %>% 
@@ -1426,12 +1421,12 @@ sensitivity_analysis_fmd <- fmd_data %>%
   adorn_ns(... = c('no', 'yes'))
 
 knitr::kable(sensitivity_analysis_fmd, caption = 'Sensitivity analysis', format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped'))
+        kableExtra::kable_styling(latex_options = c('striped',  'HOLD_position'))
 
 ```
 
 
-### Data use and data availability
+## Data use and data availability
 
 ```{r}
 data_use_and_availability_fmd <- fmd_data %>% 
@@ -1445,14 +1440,14 @@ data_use_and_availability_fmd <- fmd_data %>%
   adorn_ns(... = c('yes', 'no')) 
 
 knitr::kable(data_use_and_availability_fmd, 
-             caption = 'How often is the data used available for public access', 
+             caption = 'Data accessibility', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 
 ```
 
 
-### Code availability
+## Code availability
 
 ```{r}
 
@@ -1466,7 +1461,7 @@ code_availability_fmd <- fmd_data %>%
 
 knitr::kable(code_availability_fmd, caption = 'Code availability', 
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
 
 
