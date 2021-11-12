@@ -1057,10 +1057,28 @@ studies_per_collab_type <- fmd_data %>%
     adorn_pct_formatting() %>% 
     adorn_ns()
 
-knitr::kable(studies_per_collab_type, caption = 'Number of studies by collaboration type',
+knitr::kable(author_affiliation_type_combos, caption = 'Number of studies by author affiliation type combination',
              format = "latex", booktabs = TRUE) %>% 
-        kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
 ```
+
+## Collaboration types (aggregated)
+
+```{r}
+#' Count by collaboration types and make a bar plot
+studies_per_collab_type <- fmd_data %>%
+    count(collab_type, sort = TRUE) %>% 
+    arrange(desc(n)) %>% 
+    adorn_totals() %>% 
+    adorn_percentages(denominator = 'col') %>% 
+    adorn_pct_formatting() %>% 
+    adorn_ns()
+
+knitr::kable(studies_per_collab_type, caption = 'Number of studies per collaboration type',
+             format = "latex", booktabs = TRUE) %>% 
+        kableExtra::kable_styling(latex_options = c('striped', 'HOLD_position'))
+```
+
 
 ### Proportions of the total publications per year by collaboration type
 
