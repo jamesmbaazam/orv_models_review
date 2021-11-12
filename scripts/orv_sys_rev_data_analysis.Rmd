@@ -752,7 +752,7 @@ knitr::kable(individual_representation, caption = 'How individuals were represen
 <!-- knitr::kable(mod_structure_vs_individual_representation, caption = 'Model structure versus individual heterogeneity') -->
 <!-- ``` -->
 
-### Spatial heterogeneity
+## Spatial heterogeneity
 
 ```{r}
 space_representation <- compact_data_with_citation_keys_no_fmd %>% 
@@ -779,7 +779,7 @@ knitr::kable(space_representation, caption = 'Was space explicitly represented i
 <!-- knitr::kable(mod_structure_vs_space_representation, caption = 'Model structure versus spatial heterogeneity') -->
 <!-- ``` -->
 
-### Model dynamics: deterministic vs stochastic
+## Model dynamics: deterministic vs stochastic
 
 ```{r}
 stochastic_vs_deterministic <- compact_data_with_citation_keys_no_fmd %>% 
@@ -1173,7 +1173,8 @@ knitr::kable(author_connectedness_to_location_fmd, caption = 'Studies with at le
              format = "latex", booktabs = TRUE) %>% 
         kableExtra::kable_styling(latex_options = c('striped', 'hold_position'))
 ```
-#### Aggregated
+
+### Aggregated
 
 ```{r}
 author_connectedness_to_location_aggreg <- fmd_data %>% 
@@ -1384,7 +1385,7 @@ knitr::kable(outcomes_tally_by_collab_type, caption = 'Outcomes measured by coll
         kableExtra::kable_styling(latex_options = c('striped'))
 ```
 
-### Parametrization methods
+## Parametrization methods
 
 ```{r}
 #wide data for table
