@@ -37,8 +37,9 @@ conflict_prefer('kable', 'knitr')
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(dev = 'jpeg')
-knitr::opts_chunk$set(fig.width = 8, fig.height = 6)
+knitr::opts_chunk$set(out.height = "\\textheight",  out.width = "\\textwidth")
 knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
 
 
 #create a folder for storing the manuscript figures
