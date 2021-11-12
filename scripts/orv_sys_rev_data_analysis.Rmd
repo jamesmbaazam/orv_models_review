@@ -808,17 +808,16 @@ knitr::kable(stochastic_vs_deterministic, caption = 'Model dynamics (determinist
 
 ```{r}
 outcomes_overall <- compact_data_with_citation_keys_no_fmd %>% 
-  mutate(outcome_measured = str_trim(outcome_measured)) %>% 
+mutate(outcome_measured = str_trim(outcome_measured)) %>% 
   separate_rows(outcome_measured, sep = ',') %>% 
-  group_by(outcome_measured) %>% 
+  group_by(collab_type, outcome_measured) %>% 
   distinct(title, .keep_all = TRUE) %>% 
+  filter(outcome_measured %nin% c('outcome_other', '', 's')) %>% 
+  count(collab_type, outcome_measured, name = 'num_of_studies') %>% 
   ungroup(outcome_measured) %>% 
-  filter(outcome_measured %nin% c('outcome_other', '')) %>% 
-  count(outcome_measured) %>% 
-  arrange(desc(n), .by_group = TRUE) %>% 
-  slice(1:15) %>% 
+  arrange(desc(num_of_studies), .by_group = TRUE) %>% 
   ungroup() %>% 
-    adorn_totals(where = c('row')) %>% 
+  adorn_totals(where = c('row')) %>% 
   adorn_percentages(denominator = 'col') %>% 
   adorn_pct_formatting() %>% 
   adorn_ns() 
