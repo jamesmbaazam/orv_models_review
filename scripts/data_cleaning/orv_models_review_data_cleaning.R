@@ -6,6 +6,7 @@ library('janitor')
 library('forcats')
 library('stringr')
 library('bib2df')
+library('xlsx')
 
 #Check if the folder for saving the cleaned files exists, if not, create a folder
 if(!dir.exists('./data/final_data/cleaned_data'))
@@ -181,10 +182,10 @@ compact_data_with_citation_keys <- left_join(review_data_compact_cleaned, citati
 
 #save the cleaned data
 saveRDS(compact_data_with_citation_keys, file = './data/final_data/cleaned_data/compact_data_with_citation_keys_cleaned.rds')
+openxlsx::write.xlsx(x = compact_data_with_citation_keys, file = './citation_tables/included_studies.xlsx')
 
 
-
-rm(list = ls())
+#rm(list = ls())
 
 # list2env(citation_data_cleaned = citation_data_cleaned, 
 #          review_data_cleaned_long = review_data_wide_to_long, 
