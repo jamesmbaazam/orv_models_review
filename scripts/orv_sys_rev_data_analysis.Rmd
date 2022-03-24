@@ -15,7 +15,6 @@ output:
 #' load packages
 library('tidyverse')
 library('readr')
-library('xlsx')
 library('ggthemes')
 library('mdthemes')
 library('scales')
@@ -190,15 +189,15 @@ prisma_chart
 
 <!-- plot(publications_per_year_plot) -->
 
-<!-- ggsave(filename = 'publications_per_year.png',  -->
+<!-- ggsave(filename = 'publications_per_year.tiff',  -->
 <!--        plot = publications_per_year_plot,  -->
-<!--        device = 'png',  -->
+<!--        device = 'tiff',  -->
 <!--        path = save_fig_here -->
 <!--        ) -->
 
-<!-- ggsave(filename = 'publications_per_year.png',  -->
+<!-- ggsave(filename = 'publications_per_year.tiff',  -->
 <!--        plot = publications_per_year_plot,  -->
-<!--        device = 'png',  -->
+<!--        device = 'tiff',  -->
 <!--        path = save_thesis_fig_here -->
 <!--        ) -->
 
@@ -270,15 +269,15 @@ prisma_chart
 
 <!-- plot(collab_proportions_plot) -->
 
-<!-- ggsave(filename = 'collab_proportions.png',  -->
+<!-- ggsave(filename = 'collab_proportions.tiff',  -->
 <!--        plot = collab_proportions_plot,  -->
-<!--        device = 'png',  -->
+<!--        device = 'tiff',  -->
 <!--        path = save_fig_here -->
 <!--        ) -->
 
-<!-- ggsave(filename = 'collab_proportions.png',  -->
+<!-- ggsave(filename = 'collab_proportions.tiff',  -->
 <!--        plot = collab_proportions_plot,  -->
-<!--        device = 'png',  -->
+<!--        device = 'tiff',  -->
 <!--        path = save_thesis_fig_here -->
 <!--        ) -->
 
@@ -319,15 +318,15 @@ prisma_chart
 
 <!-- plot(collabs_per_year_plot) -->
 
-<!-- ggsave(filename = 'total_collabs_per_year_plot.png', -->
+<!-- ggsave(filename = 'total_collabs_per_year_plot.tiff', -->
 <!--        plot = collabs_per_year_plot,  -->
-<!--        device = 'png', -->
+<!--        device = 'tiff', -->
 <!--        path = save_fig_here -->
 <!--        ) -->
 
-<!-- ggsave(filename = 'total_collabs_per_year_plot.png', -->
+<!-- ggsave(filename = 'total_collabs_per_year_plot.tiff', -->
 <!--        plot = collabs_per_year_plot,  -->
-<!--        device = 'png', -->
+<!--        device = 'tiff', -->
 <!--        path = save_thesis_fig_here -->
 <!--        ) -->
 
@@ -876,15 +875,15 @@ outcomes_tally_plot <- ggplot(data = outcomes_tally_by_collab_type,
 
 print(outcomes_tally_plot)
 
-ggsave(filename = 'outcomes_tally_plot.png',
+ggsave(filename = 'outcomes_tally_plot.tiff',
        plot = outcomes_tally_plot, 
-       device = 'png',
+       device = 'tiff',
        path = save_fig_here
        )
 
-ggsave(filename = 'outcomes_tally_plot.png',
+ggsave(filename = 'outcomes_tally_plot.tiff',
        plot = outcomes_tally_plot, 
-       device = 'png',
+       device = 'tiff',
        path = save_thesis_fig_here
        )
 ```
@@ -1409,9 +1408,9 @@ outcomes_tally_plot <- ggplot(data = outcomes_tally_by_collab_type,
   theme(strip.text = element_text(size = 15, face = 'bold'))  
 
 #save the plot
-ggsave(filename = 'outcomes_tally_fmd_plot.png',
+ggsave(filename = 'outcomes_tally_fmd_plot.tiff',
        plot = outcomes_tally_plot, 
-       device = 'png',
+       device = 'tiff',
        path = save_fig_here
        )
 ```
