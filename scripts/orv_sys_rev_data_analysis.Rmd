@@ -55,10 +55,7 @@ if(!dir.exists('../figs_manuscript'))
 
 #save figures in this folder
 save_fig_here <- '../figs_manuscript'
-
-save_thesis_fig_here <- "C:/Users/JAMESAZAM/Dropbox/My Academic Repository/_SACEMA/Academic/_PhD/__PhD_Thesis/_Thesis_LaTeX/figs/chapter_3"
 ```
-
 
 ```{r}
 # Load the cleaned data 
