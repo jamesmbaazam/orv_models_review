@@ -26,6 +26,10 @@ library('bib2df')
 library('conflicted')
 library('Hmisc')
 library('ggwordcloud')
+library('PRISMAstatement')
+library('htmlwidgets')
+library('webshot')
+
 
 #resolve package function conflicts
 conflict_prefer('filter', 'dplyr')
@@ -145,9 +149,8 @@ fmd_data <- compact_data_with_citation_keys %>%
 
 # Human vaccine-preventable diseases
 
+## PRISMA chart
 ```{r eval=FALSE}
-library(PRISMAstatement)
-
 prisma_chart <- prisma(found = 12986,
        found_other = 0,
        no_dupes = 5012, 
@@ -159,46 +162,72 @@ prisma_chart <- prisma(found = 12986,
        qualitative = 253, 
        quantitative = 0,
        width = 800, height = 800,
-       font_size = 12)
+       font_size = 14
+       )
 
-prisma_chart
+#Save the files 
+ggsave(prisma_chart,
+       filename = 'outbreak_size_isocline.tiff',
+       path = save_fig_here,
+       width = 23.76,
+       height = 17.86,
+       units = 'cm')
 ```
-
 
 <!-- ## Publications per year -->
 
 <!-- ```{r} -->
 
 <!-- publications_per_year <- compact_data_with_citation_keys_no_fmd %>%  -->
+
 <!--   count(publication_year)  -->
 
 <!-- publications_per_year_plot <- ggplot(data = publications_per_year) +  -->
-<!--   geom_bar(aes(x = publication_year,  -->
-<!--                y = n -->
-<!--                ),  -->
-<!--            stat = 'identity',  -->
-<!--            color = 'black', -->
-<!--            fill = 'tomato3' -->
-<!--            ) + -->
-<!--   scale_y_continuous(breaks = seq(0, 30, 2), -->
-<!--                      labels = seq(0, 30, 2) -->
-<!--                      ) + -->
-<!--   labs(x = '**Year of publication**', y = '**Number of papers**') + -->
-<!--   md_theme_minimal(base_size = 12) -->
 
+<!--   geom_bar(aes(x = publication_year,  -->
+
+<!--                y = n -->
+
+<!--                ),  -->
+
+<!--            stat = 'identity',  -->
+
+<!--            color = 'black', -->
+
+<!--            fill = 'tomato3' -->
+
+<!--            ) + -->
+
+<!--   scale_y_continuous(breaks = seq(0, 30, 2), -->
+
+<!--                      labels = seq(0, 30, 2) -->
+
+<!--                      ) + -->
+
+<!--   labs(x = '**Year of publication**', y = '**Number of papers**') + -->
+
+<!--   md_theme_minimal(base_size = 12) -->
 
 <!-- plot(publications_per_year_plot) -->
 
 <!-- ggsave(filename = 'publications_per_year.tiff',  -->
+
 <!--        plot = publications_per_year_plot,  -->
+
 <!--        device = 'tiff',  -->
+
 <!--        path = save_fig_here -->
+
 <!--        ) -->
 
 <!-- ggsave(filename = 'publications_per_year.tiff',  -->
+
 <!--        plot = publications_per_year_plot,  -->
+
 <!--        device = 'tiff',  -->
+
 <!--        path = save_thesis_fig_here -->
+
 <!--        ) -->
 
 <!-- ``` -->
