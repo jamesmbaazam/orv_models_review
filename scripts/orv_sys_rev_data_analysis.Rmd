@@ -360,6 +360,35 @@ ggsave(filename = 'total_collabs_per_year_plot.tiff',
 
 Even though non-academic collaborations increased over time, the share of total publications per year over time decreased.
 
+## Share of total publications per year (mixed collaborations)
+```{r}
+#' Calculate the cumulative percent of total mixed collaboration studies over the period
+collabs_per_year <- compact_data_with_citation_keys_no_fmd %>%
+    filter(collab_type == 'mixed') |> 
+    count(year_aggreg, collab_type, name = 'total_publications') |> 
+    mutate(contribution = total_publications/sum(total_publications), 
+           contribution_cumulative = cumsum(contribution), 
+           past_half = ifelse(contribution_cumulative <= 0.5, 'no', 'yes')
+           ) 
+
+share_of_total <- collabs_per_year |> 
+    ggplot() + 
+    geom_bar(aes(x = year_aggreg, y = contribution_cumulative), stat = 'identity') + 
+    geom_hline(aes(yintercept = 0.5)) +
+  scale_x_continuous(breaks = seq(2005, 2020, 2),
+                     labels = x_axis_labels,
+                     expand = c(0, 0)
+                     ) +
+    labs(title = 'Cumulative percentage of total publications per year', 
+         x = 'Year',
+         y = 'cumulative percentage',
+         caption = 'horizontal line shows the 50% mark. The first bar to cross it shows the year that cumulative studies exceeded 50%.')
+
+print(share_of_total)
+
+
+```
+
 
 ## Collaboration patterns in geographic space
 
