@@ -4,7 +4,6 @@ library('ggthemes')
 library('scales')
 library('janitor')
 library('forcats')
-library('stringr')
 library('bib2df')
 
 #Check if the folder for saving the cleaned files exists, if not, create a folder
