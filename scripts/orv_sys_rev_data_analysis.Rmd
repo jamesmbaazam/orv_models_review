@@ -34,6 +34,27 @@ save_thesis_fig_here <- "C:/Users/JAMESAZAM/Dropbox/My Academic Repository/_SACE
 
 
 ```{r}
+#' load packages
+suppressPackageStartupMessages({
+    library('tidyverse')
+    library('ggthemes')
+    library('scales')
+    library('janitor')
+    library('countrycode')
+    library('bib2df')
+    library('conflicted')
+    library('Hmisc')
+    library('ggwordcloud')
+})
+
+#resolve package function conflicts
+conflict_prefer('filter', 'dplyr')
+conflict_prefer('select', 'dplyr')
+conflict_prefer('kable', 'knitr')
+```
+
+
+```{r}
 # Load the cleaned data 
 long_data <- read_rds('../data/final_data/cleaned_data/review_data_long_cleaned.rds')
 
