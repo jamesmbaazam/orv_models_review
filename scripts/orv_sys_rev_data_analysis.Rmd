@@ -143,23 +143,27 @@ fmd_data <- compact_data_with_citation_keys %>%
 
 # Human vaccine-preventable diseases
 
-```{r eval=FALSE}
-library(PRISMAstatement)
+<!-- # ```{r eval=FALSE} -->
+<!-- # library(PRISMAstatement) -->
+<!-- #  -->
+<!-- # prisma_chart <- prisma(found = 12986, -->
+<!-- #        found_other = 0, -->
+<!-- #        no_dupes = 5012,  -->
+<!-- #        extra_dupes_box = TRUE, -->
+<!-- #        screened = 5012,  -->
+<!-- #        screen_exclusions = 4211,  -->
+<!-- #        full_text = 801, -->
+<!-- #        full_text_exclusions = 548,  -->
+<!-- #        qualitative = 253,  -->
+<!-- #        quantitative = 0, -->
+<!-- #        width = 800, height = 800, -->
+<!-- #        font_size = 12) -->
+<!-- #  -->
+<!-- # prisma_chart -->
+<!-- # ``` -->
 
-prisma_chart <- prisma(found = 12986,
-       found_other = 0,
-       no_dupes = 5012, 
-       extra_dupes_box = TRUE,
-       screened = 5012, 
-       screen_exclusions = 4211, 
-       full_text = 801,
-       full_text_exclusions = 548, 
-       qualitative = 253, 
-       quantitative = 0,
-       width = 800, height = 800,
-       font_size = 12)
 
-prisma_chart
+## Publications per year
 ```
 
 
