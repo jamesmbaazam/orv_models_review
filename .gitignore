@@ -93,3 +93,13 @@ po/*~
 
 ## RStudio Connect folder
 rsconnect/
+
+figs_manuscript/
+
+*.docx
+
+*.pdf
+
+scripts/orv_sys_rev_data_analysis.tex
+
+*.jpeg
