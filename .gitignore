@@ -103,3 +103,5 @@ figs_manuscript/
 scripts/orv_sys_rev_data_analysis.tex
 
 *.jpeg
+
+*.bak
